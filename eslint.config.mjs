@@ -17,6 +17,11 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Project-level Claude skills: git-ignored, installed per machine.
     ".claude/**",
+    // Generated output: test coverage and the static Storybook build.
+    "coverage/**",
+    "storybook-static/**",
+    // Owner-private material: git-ignored, never linted (see AGENTS.md).
+    ".private/**",
   ]),
   {
     "rules": {
