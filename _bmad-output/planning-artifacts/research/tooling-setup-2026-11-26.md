@@ -16,7 +16,7 @@ Owner, 2026-11-26:
 
 - The three new skills install at project level only, under `.claude/skills/`. That folder stays git-ignored, so they are local to this machine.
 - Chrome's modern web guidance: a read-only copy of its guides, never its npm CLI.
-- From juliobsz/skills: jury only. awwwards is not installed. It builds award-style marketing sites with heavy WebGL and scroll effects, which conflicts with the Cuatro contract's motion rules.
+- From juliobsz/skills: both skills, jury and awwwards, installed and wired. The review's concern about awwwards was raised: it targets award-style marketing sites with heavy WebGL and scroll effects, which conflicts with the Cuatro contract's motion rules. The owner kept it, and section 2.3 sets the limits that make it safe here.
 - An independent Codex review layer runs in Build, gated by path (section 3.1).
 - Build commits and pushes to `origin main` itself after a verified change (the single-branch workflow in `AGENTS.md`).
 
@@ -50,18 +50,27 @@ For every source: clone it into a new temporary directory outside the repo, chec
   - Body: find a guide by running Grep with a feature keyword over the `guides/` folder, read the match, then apply its pattern and its fallback. When a guide says `npx ... retrieve <id>`, read the guide with that id from the folder instead; never run npx for this skill. On visual matters, the Cuatro token contract and the project's design documents win over any guide. Paraphrase guides rather than quoting them, since they contain dashes. Credit the source, its commit, and its licenses.
 - In `.claude/settings.json`, deny Bash commands that run the modern-web-guidance package through npx or pnpx. Check the rule syntax against the Claude Code settings docs (the update-config skill covers them), and check whether deny rules still apply in the permission mode this machine runs.
 
-### 2.3 jury (juliobsz/skills)
+### 2.3 jury and awwwards (juliobsz/skills)
 
 - Source: `https://github.com/juliobsz/skills` at `add880bd6ec9f5592a1482846fc0dd282c9161bc`, main on 2026-10-26. It is MIT-licensed, with a single maintainer and unsigned commits.
-- Copy `jury/` to `.claude/skills/jury/`, and copy the repo's `LICENSE` into it, since the folder has none of its own. `diff -r` against the source should show only the added LICENSE.
-- Pin its QA dependencies once, outside the repo. In `~/.cache/jury`, run `npm init -y`, then `npm i -D --save-exact playwright@1.64.0 axe-core@4.14.0`. jury falls back to an installed Chrome or Edge, so download Chromium (`npx playwright@1.64.0 install chromium`) only if neither is found. Then, in the copied `SKILL.md` (around line 57), replace the unpinned install line with a note to reuse `~/.cache/jury` and never rerun `npm i` there.
-- In `.claude/settings.json`, give jury name-only visibility (`skillOverrides`), so a generic "review" request never triggers it but BMAD can still call it by name. Check the key against the settings docs.
-- Limits for every wiring entry:
+- Copy `jury/` to `.claude/skills/jury/` and `awwwards/` to `.claude/skills/awwwards/`, and copy the repo's `LICENSE` into each, since neither folder has its own. `diff -r` against the source should show only the added LICENSE in each.
+- Pin the QA dependencies both skills use, once, outside the repo. In `~/.cache/jury`, run `npm init -y`, then `npm i -D --save-exact playwright@1.64.0 axe-core@4.14.0`. The scripts fall back to an installed Chrome or Edge, so download Chromium (`npx playwright@1.64.0 install chromium`) only if neither is found. Then, in both copied `SKILL.md` files, replace the unpinned install lines (jury around line 57, awwwards around lines 133 and 134) with a note to reuse `~/.cache/jury` and never rerun `npm i` there or in the project.
+- In `.claude/settings.json`, give both skills name-only visibility (`skillOverrides`), so neither fires on its own but BMAD can still call them by name. This matters most for awwwards. Its description triggers on "premium", "immersive", and redesign requests and tells the agent to ship without asking questions, which would hijack the BMAD UX flow for this very redesign. Check the key against the settings docs. If the key does not exist, install both under `.claude/skill-library/` (git-ignored) instead, and have the wiring read them by path.
+- Limits for every jury wiring entry:
   - Serve or start the app bound to localhost only (`pnpm start -p 4400 -H 127.0.0.1`), and stop the server when the run ends.
   - Write evidence only to `.jury/` and `.shots/`. Never point `--out` at a folder holding real images: it deletes the `.png` files there.
   - Report only. Skip its closing offer to fix or redesign the project.
   - Its scores are evidence, never a gate. The rubric is tuned for award sites and rewards decorative motion.
   - It cannot sign in, so it covers the auth pages, a static Storybook build, and UX mockups.
+- Limits for every awwwards wiring entry:
+  - Scope: public showcase surfaces only, such as a landing page or the entry to the public demo. Never the signed-in data screens.
+  - The Cuatro contract wins on every conflict. Only transform and opacity animate, durations come from the tokens, and prefers-reduced-motion is honored. There is no parallax, bounce, overshoot, infinite loop, or gradient. The contract's three typefaces and dark tokens replace its palettes and font picks.
+  - Never scaffold (`create-next-app`, `create astro`): the app exists. Never run npm in the project. A story that needs gsap, lenis, or ogl adds them inside a Build story with `pnpm add --save-exact` at a reviewed version, and never creates `package-lock.json`.
+  - Never write the `DESIGN.md`, `src/data/site.ts`, or `src/engine/**` it asks for: `DESIGN.md` belongs to BMAD's UX step, and the repo has no `src/`. Concept and art direction go to a named file in the UX workspace (for example `awwwards-concept.md`), and engine code follows the layout the architecture sets.
+  - Never install or invoke `wheresryan22/anatomy` or any other skill it suggests. They are unreviewed.
+  - Never deploy (vercel, netlify, wrangler), never serve to the network (`npx serve` binds to every interface; use 127.0.0.1), and never run an unpinned `npx lighthouse`.
+  - Never run `font.mjs`, since the contract ships its own fonts. Run `photos.mjs` and `og.mjs` only inside a showcase Build story, with output in `.photos/` and the paths the story names.
+  - Privacy: its brief phase reads memory and project files to write public copy. Never read `.private/` or the re-entry assessment for that, and use fictional figures with no personal details.
 
 ## 3. BMAD wiring
 
@@ -83,7 +92,9 @@ Stamp `_bmad/custom/bmad-build.toml` with the `wire-bmad-build` skill (`~/.claud
    - for type, or hover, focus, and press states, read `~/.claude/skills/apple-design/SKILL.md`;
    - for viewport, inputs, or touch, read mobile-native;
    - for charts, use dataviz;
-   - for a UI pattern or its fallback, read the matching modern-web-guidance guide.
+   - for a UI pattern or its fallback, read the matching modern-web-guidance guide;
+   - for a new screen, use frontend-design, ranked below the UX step's `DESIGN.md` and the token contract;
+   - for a public showcase surface, read the awwwards references (engine, nextjs, webgl, patterns) within the section 2.3 limits.
 4. Facts: `main` is the only branch, so never stop on a branch mismatch. After a verified change, commit with a Conventional Commit subject line only and push to `origin main`, with no PR (`AGENTS.md`). Before pushing, re-run the verification commands on the final tree.
 5. Verification commands: `pnpm typecheck`, `pnpm test`, and `pnpm exec eslint .`. The `lint` script stays broken until the code sync step fixes it.
 6. In verification-loop's secret scan, use `git grep -l` over tracked files and report file names only, never matching lines.
@@ -114,7 +125,7 @@ Its lens subagents are told never to invoke a skill, so each lens reads its meth
 ### 3.4 bmad-ux
 
 - persistent_facts: the visual source of truth is the Cuatro design contract (`../cuatro-portfolio/contracts/`) together with the portfolio's UX spines. Read the sections a task needs rather than whole files. The UX step's prompt names the exact inputs.
-- creative_tools: frontend-design and dataviz. external_sources: the modern-web-guidance guides.
+- creative_tools: frontend-design and dataviz, plus awwwards for the concept and art direction of public showcase surfaces only, within the section 2.3 limits. external_sources: the modern-web-guidance guides.
 - finalize_reviewers: apple-design and mobile-native (read by path), and jury on mockups served on 127.0.0.1, within the section 2.3 limits.
 
 ### 3.5 bmad-architecture
@@ -133,11 +144,14 @@ persistent_facts:
 - Use the e2e-testing and ai-regression-testing skills.
 - `.gitignore` carries boilerplate patterns (`*test`, `*tests`, `*tmp`, `*temp`) that silently ignore any folder named `test` or `tests`. A new e2e folder needs a different name, or the code sync step fixes `.gitignore` first.
 
-### 3.8 Later, not now
+### 3.8 bmad-prd
+
+finalize_reviewers: product-lens, so the PRD step's reviewer gate offers it.
+
+### 3.9 Later, not now
 
 - bmad-project-context: graphify, when it runs after the code sync step.
 - bmad-retrospective: a persistent fact, not `activation_steps_append`, which runs before the epic is fixed. After Phase 1 fixes the epic and its diff, run ponytail-audit, click-path-audit, and security-audit in Guidance mode on the epic's files.
-- bmad-prd: an optional product-lens finalize reviewer.
 - bmad-sprint-planning: nothing.
 
 ## 4. Commits
@@ -145,7 +159,7 @@ persistent_facts:
 Each lands on `main` with a subject line only, then `git push origin main`.
 
 1. `chore(bmad): track bmad overrides and ignore installer output`.
-   - `.gitignore` gains `.claude/skills/`, `.claude/settings.local.json`, `_bmad/*` with `!_bmad/custom/`, `/graphify-out/`, `.jury/`, and `.shots/`.
+   - `.gitignore` gains `.claude/skills/`, `.claude/settings.local.json`, `_bmad/*` with `!_bmad/custom/`, `/graphify-out/`, `.jury/`, `.shots/`, and `.photos/`.
    - Track `_bmad/custom/.gitignore` and `_bmad/custom/config.toml`. `_bmad/custom/config.user.toml` stays ignored by `_bmad/custom/.gitignore`.
 2. `chore(bmad): wire reviewed skills into bmad workflows`: the new `_bmad/custom/*.toml` files and `.claude/settings.json`.
 
@@ -156,7 +170,8 @@ Paste real output for each check.
 - The resolver output for every overridden skill, showing the merged values.
 - wire-bmad-build Part E, including its headless probe, plus one more probe question: does a fresh session's context contain the rule about `.private/finance-guide.docx.md`?
 - Each install's commit or tree-hash check, and its `diff -r` result.
-- `git check-ignore -v` for `.claude/skills/jury/SKILL.md`, `_bmad/config.toml`, and `.private/finance-guide.docx.md`, plus a clean `git status` after commit 2.
+- `git check-ignore -v` for `.claude/skills/jury/SKILL.md`, `.claude/skills/awwwards/SKILL.md`, `_bmad/config.toml`, and `.private/finance-guide.docx.md`, plus a clean `git status` after commit 2.
+- That a plain request such as "redesign the login page" in a fresh session does not load awwwards or jury on its own.
 - A dash and emoji scan of every file written into the repo.
 
 ## 6. Evidence
