@@ -96,7 +96,7 @@ Stamp `_bmad/custom/bmad-build.toml` with the `wire-bmad-build` skill (`~/.claud
    - for a new screen, use frontend-design, ranked below the UX step's `DESIGN.md` and the token contract;
    - for a public showcase surface, read the awwwards references (engine, nextjs, webgl, patterns) within the section 2.3 limits.
 4. Facts: `main` is the only branch, so never stop on a branch mismatch. After a verified change, commit with a Conventional Commit subject line only and push to `origin main`, with no PR (`AGENTS.md`). Before pushing, re-run the verification commands on the final tree.
-5. Verification commands: `pnpm typecheck`, `pnpm test`, and `pnpm exec eslint .`. The `lint` script stays broken until the code sync step fixes it.
+5. Verification commands: `pnpm typecheck`, `pnpm test`, and `pnpm lint`.
 6. In verification-loop's secret scan, use `git grep -l --untracked`, so files a change creates are covered while the standard excludes keep `.private/` out. Report file names only, never matching lines, and repeat the scan before every push.
 7. The Cuatro token contract's motion durations win over the motion skills' defaults of under 300ms (the contract's `--dur-major` is 420ms).
 8. Host-provided skills (dataviz, the built-in security-review) may be missing in headless runs. Every fact and layer that uses one says to skip it with a note.

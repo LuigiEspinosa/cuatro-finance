@@ -5,7 +5,7 @@ Personal finance app for Colombia. One owner, public repository.
 ## Git workflow
 
 - One branch, `main`. When a change is done and verified, commit it on `main` and push it to `origin main`. No feature branches and no pull requests (owner decision, 2026-11-26).
-- There is no CI, so run `pnpm typecheck` and `pnpm test` before pushing a code change.
+- There is no CI, so run `pnpm typecheck`, `pnpm test` and `pnpm lint` before pushing a code change.
 
 ## Private material
 
