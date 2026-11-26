@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, it, expect, vi } from "vitest";
 
 // Resolved from this file, not the cwd, so the checks hold wherever vitest starts.
@@ -12,5 +12,10 @@ describe("repository config", () => {
     const script = config.migrations?.seed?.split(" ").at(-1);
     if (!script) throw new Error("prisma.config.ts names no seed script");
     expect(existsSync(fromRoot(script))).toBe(true);
+  });
+
+  it("keeps the .private/ rule in the committed .gitignore", () => {
+    const lines = readFileSync(fromRoot(".gitignore"), "utf8").split(/\r?\n/);
+    expect(lines).toContain(".private/");
   });
 });
