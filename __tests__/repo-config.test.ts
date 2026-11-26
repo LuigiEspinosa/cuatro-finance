@@ -14,8 +14,10 @@ describe("repository config", () => {
     expect(existsSync(fromRoot(script))).toBe(true);
   });
 
-  it("keeps the .private/ rule in the committed .gitignore", () => {
+  it("keeps the .private/ and env file rules in the committed .gitignore", () => {
     const lines = readFileSync(fromRoot(".gitignore"), "utf8").split(/\r?\n/);
     expect(lines).toContain(".private/");
+    expect(lines).toContain(".env*");
+    expect(lines).toContain("!.env.example");
   });
 });
