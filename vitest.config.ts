@@ -5,8 +5,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    // Project-level Claude skills ship their own tests; never collect them.
-    exclude: [...configDefaults.exclude, ".claude/**"],
+    // Project-level Claude skills ship their own tests, and owner-private
+    // material is never scripted over (see AGENTS.md): never collect either.
+    exclude: [...configDefaults.exclude, ".claude/**", ".private/**"],
     env: {
       // Provides a valid key for all tests that import lib/crypto.ts
       ENCRYPTION_KEY:
