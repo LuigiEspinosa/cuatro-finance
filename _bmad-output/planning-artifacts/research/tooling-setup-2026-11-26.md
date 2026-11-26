@@ -140,10 +140,10 @@ persistent_facts: every UI story names, in its spec, the design skills and guide
 
 persistent_facts:
 
-- Vitest 4 runs in the node environment, with tests in `lib/__tests__/`. No test uses a DOM environment, so a component test that needs one first adds a reviewed environment at an exact version, in its own story.
+- Vitest 4 runs in the node environment and collects test files outside its excludes (today `lib/__tests__/` and the root `__tests__/`). No test uses a DOM environment, so a component test that needs one first adds a reviewed environment at an exact version, in its own story.
 - E2E tests use `@playwright/test`, added inside a story with `pnpm add -D --save-exact @playwright/test@1.64.0`, never with npm, npx or an unpinned version.
 - Use the e2e-testing and ai-regression-testing skills.
-- Check a new test folder with `git check-ignore -v` first: `.gitignore` has carried placeholder patterns (`*test`, `*tests`, `*testing`) that silently ignore such folders.
+- Check a new test folder with `git check-ignore -v` first, and pick another name if a rule matches it. (The placeholder patterns `*test`, `*tests` and `*testing` that once ignored such folders were removed on 2026-11-26.)
 
 ### 3.8 bmad-prd
 
@@ -151,7 +151,7 @@ finalize_reviewers: a product-lens review that applies its Mode 1 questions to `
 
 ### 3.9 Later, not now
 
-- bmad-project-context: graphify, when it runs after the code sync step.
+- bmad-project-context: graphify, the first time it runs (planned after the first story). Its old precondition, the code sync step, landed on 2026-11-26.
 - bmad-retrospective: a persistent fact, not `activation_steps_append`, which runs before the epic is fixed. After Phase 1 fixes the epic and its diff, run ponytail-audit, click-path-audit, and security-audit in Guidance mode on the epic's files.
 - bmad-sprint-planning: nothing.
 - bmad-build-auto and bmad-dev-auto: deliberately unwired, since the owner does not run the unattended loop. Wire them before using it.
