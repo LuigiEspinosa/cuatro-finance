@@ -7,6 +7,8 @@ const fromRoot = (path: string) => new URL(`../${path}`, import.meta.url);
 describe("repository config", () => {
   it("loads prisma.config.ts without DATABASE_URL and names a seed script that exists", async () => {
     vi.stubEnv("DATABASE_URL", undefined);
+    // A local .env must not refill the variable, or an env() regression would pass.
+    vi.doMock("dotenv/config", () => ({}));
     const { default: config } = await import("../prisma.config");
     vi.unstubAllEnvs();
     const script = config.migrations?.seed?.split(" ").at(-1);
