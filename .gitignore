@@ -367,3 +367,20 @@ generated/prisma
 
 *storybook.log
 storybook-static
+
+# BMAD: only _bmad/custom/ is tracked; the rest is installer output
+_bmad/*
+!_bmad/custom/
+
+# Claude Code: project skills and personal settings stay local
+.claude/skills/
+.claude/settings.local.json
+
+# Graphify knowledge graph, rebuilt from the tree by `graphify update .` (see
+# `_bmad/custom/bmad-build.toml`). Derived output, never committed.
+/graphify-out/
+
+# Evidence written by the jury and awwwards QA scripts
+.jury/
+.shots/
+.photos/
