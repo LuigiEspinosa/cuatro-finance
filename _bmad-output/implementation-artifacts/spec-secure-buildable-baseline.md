@@ -83,6 +83,8 @@ context: ['{project-root}/AGENTS.md']
 
 ## Spec Change Log
 
+- 2026-11-26, orchestrator review after completion. Triage rows 19, 20 and 24 now point only at the private record. Two record corrections: on the final tree, `pnpm test` passed 65 of 65 across four files on both runs (the 63 in Implementation Notes predates review pass 1), and the newest package in the lockfile delta is next 16.4.5, published 2026-11-03, not 2026-11-02.
+
 ## Review Triage Log
 
 Pass 1 (2026-11-26). Layers: blind-hunter, edge-case-hunter, verification-gap, ponytail-review (no findings: "Lean already. Ship."), ecc-verification-loop (PASS) and security-audit. Design Review skipped: no `.tsx` or `.css` under `app/` or `components/`. Groups: A is lint scope, B is regression checks for the config fixes, D1 to D8 are the deferred-work entries.
@@ -108,12 +110,12 @@ Pass 1 (2026-11-26). Layers: blind-hunter, edge-case-hunter, verification-gap, p
 | 16 | verification-gap | README names things that do not exist (other) | low | Same defect as row 6. | defer, D3 |
 | 17 | ecc-verification-loop | Testing-library packages unused | low | Same defect as row 5. | defer, D2 |
 | 18 | ecc-verification-loop | Layer skipped build, frozen install, audit, the second test run and a database command | false | The orchestrator ran all of them on the final tree; see Implementation Notes. | rejected |
-| 19 | security-audit | Lead on a pre-existing gap in shipped code | high | Real and pre-existing; already in the local assessment's section 4, which the intent excludes. Details stay there. | rejected, out of scope by intent |
-| 20 | security-audit | Lead on a second pre-existing gap in shipped code | low | Real and pre-existing, with no production caller; already in the local assessment's section 4. | rejected, out of scope by intent |
+| 19 | security-audit | Pre-existing security finding, tracked privately | n/a | Outside the eight concerns. | rejected, out of scope by intent |
+| 20 | security-audit | Pre-existing security finding, tracked privately | n/a | Outside the eight concerns. | rejected, out of scope by intent |
 | 21 | security-audit | Deleting `*test` un-ignored `.env.test` | medium | `git check-ignore` matches `.env.test` at the baseline only through `*test`, and nothing matches it now. | patch |
 | 22 | security-audit | ESLint walks `.private/` | medium | `isPathIgnored(".private/probe.ts")` is false, against the AGENTS.md rule never to script over it. | patch, group A |
 | 23 | security-audit | Money lint selectors match bare identifiers only | low | `account.balance_centavos + x`, `+=` and `/` pass; predates this change. | defer, D5 |
-| 24 | security-audit | Pre-existing data-integrity defect in a transactions route | medium | Already in the local assessment's section 5, which the intent excludes. | rejected, out of scope by intent |
+| 24 | security-audit | Pre-existing finding, tracked privately | n/a | Outside the eight concerns. | rejected, out of scope by intent |
 | 25 | security-audit | Unbounded `limit` on the transactions list | low | `Number(searchParams.get("limit") ?? "50")` is used as is; predates this change. | defer, D6 |
 | 26 | security-audit | `.env` beats `.env.local` under `prisma db seed` | medium | Same defect as row 7. | defer, D4 |
 | 27 | edge-case-hunter | Lint fails after `build-storybook` | medium | Same defect as row 1. | patch, group A |
