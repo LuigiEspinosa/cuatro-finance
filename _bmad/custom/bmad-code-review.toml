@@ -28,7 +28,7 @@ If the skill is unavailable, report that exact failure and stop. Return only the
 [[workflow.review_layers]]
 id = "emil-review-animations"
 name = "Design Review"
-when = "The diff touches a file under `app/` or `components/`, or any `.css` file. Decide from the file list in the diff file, not from the review mode."
+when = "The diff touches a `.tsx` or `.css` file under `app/` or `components/` (test files excluded), or any other `.css` file. Decide from the file list in the diff file, not from the review mode."
 instruction = """
 Before launching, replace GUIDE_IDS in the prompt below with the modern-web-guidance guide ids recorded in the Design Notes of `{spec_file}` when a spec is loaded, comma separated, or with `none recorded`. Then launch a context-free subagent with this prompt:
 
@@ -50,7 +50,7 @@ If a skill file is unavailable, report that exact failure and stop. Return only 
 [[workflow.review_layers]]
 id = "security-audit"
 name = "Security Audit (Guidance mode)"
-when = "The diff touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from the file list in the diff file, not from the review mode."
+when = "The diff touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/`, `app/(app)/layout.tsx`, any `page.tsx` under `app/(app)/`, `prisma/`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` or `next.config.ts`. Decide from the file list in the diff file, not from the review mode."
 instruction = """
 Launch a context-free subagent with this prompt:
 

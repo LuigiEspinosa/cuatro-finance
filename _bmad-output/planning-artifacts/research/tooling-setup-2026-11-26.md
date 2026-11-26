@@ -28,7 +28,7 @@ Defaults the owner can overrule:
 
 ## 2. Skills to install
 
-For every source: clone it into a new temporary directory outside the repo, check out the pinned commit detached, verify it, copy only what is listed, then compare the copy with the source using `diff -r`. Never use a README's `npx skills add` route: it is unpinned, and its CLI sends telemetry. Never run a downloaded script, except the jury dependency pin in 2.3.
+For every source: clone it into a new temporary directory outside the repo, check out the pinned commit detached, verify it, copy only what is listed, then compare the copy with the source using `diff -r`. Never use a README's `npx skills add` route: it is unpinned, and its CLI sends telemetry. Never run a downloaded script, except the jury dependency pin in 2.3. Before copying a skill into the repo tree, make sure ESLint and Vitest exclude `.claude/**`, and check `pnpm exec vitest list --filesOnly`: during this setup, `pnpm test` ran security-audit's downloaded test files before that exclusion existed.
 
 ### 2.1 security-audit (Cloudflare)
 
@@ -48,7 +48,7 @@ For every source: clone it into a new temporary directory outside the repo, chec
 - Write a new `SKILL.md` in that folder, in the house style (no dashes, no emoji):
   - Frontmatter: `name: modern-web-guidance`. The description is scoped to this repo: modern web platform patterns from Chrome's guides (Baseline features, accessibility, performance, forms, CSS), read locally, for designing or building UI here.
   - Body: find a guide by running Grep with a feature keyword over the `guides/` folder, read the match, then apply its pattern and its fallback. When a guide says `npx ... retrieve <id>`, read the guide with that id from the folder instead; never run npx for this skill. On visual matters, the Cuatro token contract and the project's design documents win over any guide. Paraphrase guides rather than quoting them, since they contain dashes. Credit the source, its commit, and its licenses.
-- In `.claude/settings.json`, deny Bash commands that run the modern-web-guidance package through npx or pnpx. Check the rule syntax against the Claude Code settings docs (the update-config skill covers them), and check whether deny rules still apply in the permission mode this machine runs.
+- In `.claude/settings.json`, deny Bash and PowerShell commands that run the modern-web-guidance package through any npm or pnpm launcher (npx, pnpx, pnpm dlx, npm exec, npm x, and their `.cmd` shims). Check the rule syntax against the Claude Code settings docs (the update-config skill covers them), and check whether deny rules still apply in the permission mode this machine runs.
 
 ### 2.3 jury and awwwards (juliobsz/skills)
 
@@ -83,12 +83,12 @@ Mechanics in BMAD 6.12.0:
 
 ### 3.1 bmad-build
 
-Stamp `_bmad/custom/bmad-build.toml` with the `wire-bmad-build` skill (`~/.claude/skills/wire-bmad-build/`), following its Parts A to E, then apply the corrections below. The portfolio's live copy at `../cuatro-portfolio/_bmad/custom/bmad-build.toml` is the evolved reference, but its Operator facts do not carry over.
+Stamp `_bmad/custom/bmad-build.toml` with the `wire-bmad-build` skill (`~/.claude/skills/wire-bmad-build/`), following its Parts A to E, then apply the corrections below. The portfolio's live copy at `../cuatro-portfolio/_bmad/custom/bmad-build.toml` is the evolved reference, but its Operator facts do not carry over. Paths under `~` stay as `~` and each subagent resolves them, as in the portfolio's copy; this departs on purpose from Part E1's absolute-path rule.
 
 1. Replace every `{diff_output}` with `{diff_file}`. Since the 2026-09-25 BMAD update, review layers get a path to a diff file; the asset and the portfolio still carry the stale placeholder.
 2. Custom `review_layers` run only on Build's full route. Add the same layers to `oneshot_review_layers`, worded for the working tree, since the oneshot route stages no diff file and runs no tests.
 3. The implementer starts with no context and never sees `persistent_facts`. Any skill call it must make goes into `implementation_handoff` as one conditional paragraph:
-   - for motion, invoke animate first;
+   - for motion, invoke animate first, held to the Cuatro token contract (its durations win, only transform and opacity animate, and `prefers-reduced-motion` gates every duration), using the existing `components/ui/` primitives wherever it asks for `pick-ui-library`;
    - for type, or hover, focus, and press states, read `~/.claude/skills/apple-design/SKILL.md`;
    - for viewport, inputs, or touch, read mobile-native;
    - for charts, use dataviz;
@@ -97,16 +97,16 @@ Stamp `_bmad/custom/bmad-build.toml` with the `wire-bmad-build` skill (`~/.claud
    - for a public showcase surface, read the awwwards references (engine, nextjs, webgl, patterns) within the section 2.3 limits.
 4. Facts: `main` is the only branch, so never stop on a branch mismatch. After a verified change, commit with a Conventional Commit subject line only and push to `origin main`, with no PR (`AGENTS.md`). Before pushing, re-run the verification commands on the final tree.
 5. Verification commands: `pnpm typecheck`, `pnpm test`, and `pnpm exec eslint .`. The `lint` script stays broken until the code sync step fixes it.
-6. In verification-loop's secret scan, use `git grep -l` over tracked files and report file names only, never matching lines.
+6. In verification-loop's secret scan, use `git grep -l --untracked`, so files a change creates are covered while the standard excludes keep `.private/` out. Report file names only, never matching lines, and repeat the scan before every push.
 7. The Cuatro token contract's motion durations win over the motion skills' defaults of under 300ms (the contract's `--dur-major` is 420ms).
 8. Host-provided skills (dataviz, the built-in security-review) may be missing in headless runs. Every fact and layer that uses one says to skip it with a note.
 
-Review layers, gated with `when` so that one run does not start eight review subagents:
+Review layers, each gated with `when` so that a run starts only the reviews its diff needs:
 
 - ponytail-review: always.
 - ecc-verification-loop: always.
-- Design Review: apple-design, review-animations, and mobile-native, all read by path, plus the modern-web-guidance guides recorded in the spec's Design Notes. Runs when the diff touches `app/`, `components/`, or any CSS file.
-- security-audit, Guidance mode only (section 2.1). Runs when the diff touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/`, or `prisma/`.
+- Design Review: apple-design, review-animations, and mobile-native, all read by path, plus the modern-web-guidance guides recorded in the spec's Design Notes. Runs when the diff touches a `.tsx` or `.css` file under `app/` or `components/` (tests excluded), or any other CSS file.
+- security-audit, Guidance mode only (section 2.1). Runs when the diff touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/`, `app/(app)/layout.tsx` (the signed-in session and MFA check), any `page.tsx` under `app/(app)/` (they check account ownership), `prisma/`, or the dependency and build manifests (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `next.config.ts`).
 
 ### 3.2 bmad-code-review
 
@@ -139,19 +139,21 @@ persistent_facts: every UI story names, in its spec, the design skills and guide
 
 persistent_facts:
 
-- Vitest 4 runs in the node environment, with tests in `lib/__tests__/`. jsdom and Testing Library are installed but unused, so a component test opts in with a per-file environment comment.
+- Vitest 4 runs in the node environment, with tests in `lib/__tests__/`. No test uses a DOM environment, so a component test that needs one first adds a reviewed environment at an exact version, in its own story.
+- E2E tests use `@playwright/test`, added inside a story with `pnpm add -D --save-exact @playwright/test@1.64.0`, never with npm, npx or an unpinned version.
 - Use the e2e-testing and ai-regression-testing skills.
-- `.gitignore` carries boilerplate patterns (`*test`, `*tests`, `*tmp`, `*temp`) that silently ignore any folder named `test` or `tests`. A new e2e folder needs a different name, or the code sync step fixes `.gitignore` first.
+- Check a new test folder with `git check-ignore -v` first: `.gitignore` has carried placeholder patterns (`*test`, `*tests`, `*testing`) that silently ignore such folders.
 
 ### 3.8 bmad-prd
 
-finalize_reviewers: product-lens, so the PRD step's reviewer gate offers it.
+finalize_reviewers: a product-lens review that applies its Mode 1 questions to `prd.md` only, asks nothing, installs nothing, and writes only the gate's review file.
 
 ### 3.9 Later, not now
 
 - bmad-project-context: graphify, when it runs after the code sync step.
 - bmad-retrospective: a persistent fact, not `activation_steps_append`, which runs before the epic is fixed. After Phase 1 fixes the epic and its diff, run ponytail-audit, click-path-audit, and security-audit in Guidance mode on the epic's files.
 - bmad-sprint-planning: nothing.
+- bmad-build-auto and bmad-dev-auto: deliberately unwired, since the owner does not run the unattended loop. Wire them before using it.
 
 ## 4. Commits
 

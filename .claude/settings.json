@@ -2,13 +2,25 @@
   "permissions": {
     "deny": [
       "Bash(npx *modern-web-guidance*)",
+      "Bash(npx.cmd *modern-web-guidance*)",
       "Bash(pnpx *modern-web-guidance*)",
+      "Bash(pnpx.cmd *modern-web-guidance*)",
       "Bash(pnpm dlx *modern-web-guidance*)",
+      "Bash(pnpm.cmd dlx *modern-web-guidance*)",
       "Bash(npm exec *modern-web-guidance*)",
+      "Bash(npm.cmd exec *modern-web-guidance*)",
+      "Bash(npm x *modern-web-guidance*)",
+      "Bash(npm.cmd x *modern-web-guidance*)",
       "PowerShell(npx *modern-web-guidance*)",
+      "PowerShell(npx.cmd *modern-web-guidance*)",
       "PowerShell(pnpx *modern-web-guidance*)",
+      "PowerShell(pnpx.cmd *modern-web-guidance*)",
       "PowerShell(pnpm dlx *modern-web-guidance*)",
-      "PowerShell(npm exec *modern-web-guidance*)"
+      "PowerShell(pnpm.cmd dlx *modern-web-guidance*)",
+      "PowerShell(npm exec *modern-web-guidance*)",
+      "PowerShell(npm.cmd exec *modern-web-guidance*)",
+      "PowerShell(npm x *modern-web-guidance*)",
+      "PowerShell(npm.cmd x *modern-web-guidance*)"
     ]
   },
   "skillOverrides": {

@@ -7,5 +7,5 @@
 [workflow]
 
 finalize_reviewers = [
-  "skill:product-lens",
+  """Product lens review: read `~/.claude/skills/product-lens/SKILL.md` (resolve `~` to `$HOME` or `%USERPROFILE%` first) and apply its Mode 1 (Product Diagnostic) questions to `prd.md` only, answering them from the document. Ask the user nothing, install or run nothing, write only the reviewer gate's review file (never PRODUCT-BRIEF.md), do not spawn subagents of your own, and return the compact summary the gate expects.""",
 ]

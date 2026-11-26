@@ -7,7 +7,8 @@
 [workflow]
 
 persistent_facts = [
-  """Vitest 4 runs in the node environment (`vitest.config.ts`), with tests in `lib/__tests__/`. jsdom and Testing Library are installed but unused, so a component test opts in with a per-file `// @vitest-environment jsdom` comment.""",
+  """Vitest 4 runs in the node environment (`vitest.config.ts`), with tests in `lib/__tests__/`. No test uses a DOM environment, and no DOM library is a supported dependency: a component test that needs one first adds a reviewed environment at an exact version, in its own story.""",
+  """E2E tests use `@playwright/test`, added inside a story with `pnpm add -D --save-exact @playwright/test@1.64.0` (the version reviewed for jury), never with npm, npx or an unpinned version, in a folder such as `e2e/`.""",
   """Use the `e2e-testing` and `ai-regression-testing` skills.""",
-  """`.gitignore` carries boilerplate patterns (`*test`, `*tests`, `*tmp`, `*temp`) that silently ignore any folder named `test` or `tests`. A new e2e folder needs a different name, or the code sync step fixes `.gitignore` first.""",
+  """Before creating a test folder, run `git check-ignore -v <folder>`: `.gitignore` has carried placeholder patterns such as `*test`, `*tests` and `*testing` that silently ignore folders with those names.""",
 ]
