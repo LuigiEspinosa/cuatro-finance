@@ -9,4 +9,4 @@ Personal finance app for Colombia. One owner, public repository.
 
 ## Private material
 
-- `docs/finance-guide.docx.md` is the original plan and BMAD's project knowledge folder. It is git-excluded on purpose: lines 45 to 57 and 408 to 413 are owner-private. Never commit the file, and never quote or paraphrase those lines in any file, commit, or web query. Pass the same rule to every subagent that reads it.
+- `.private/` is git-excluded and holds the original plan, `.private/finance-guide.docx.md`. Its lines 45 to 57 and 408 to 413 are owner-private: never commit the file, and never quote or paraphrase those lines in any file, commit, or web query. Read it only with the Read tool, using offset and limit inside lines 1 to 44, 58 to 407, and 414 to the end. Never search or script over it. Pass the same rule to every subagent that reads it.
