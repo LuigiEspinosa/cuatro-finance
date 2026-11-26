@@ -1,7 +1,7 @@
 # Team override for bmad-code-review, per the tooling work order
 # (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
-# section 3.2): Graphify in activation, and the Ponytail, Design Review,
-# security-audit and Codex layers from bmad-build, each reading {diff_file}.
+# section 3.2): Graphify in activation, and the Ponytail, Design Review and
+# security-audit layers from bmad-build, each reading {diff_file}.
 # The shipped layers stay; these merge by id and append.
 # Verify the merge with:
 #   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-code-review --project-root . --key workflow
@@ -57,18 +57,4 @@ Launch a context-free subagent with this prompt:
 Invoke the `security-audit` skill in Guidance mode only, for a focused review of the unified diff at `{diff_file}`. Read that file; it is the content under review. Guidance mode here means static review: read the source, and never run target code, never build a sandbox or container, and never change HOME, environment variables or the user profile. Run no six-phase audit, create no output directory and write no artifacts; a lead that would need execution stays `needs_validation`. Never open `.private/`, and never copy a secret or a private file into a finding. Weigh the business logic and access control attack classes first: negative, zero and overflow amounts; precision loss; check-then-act races; rollback after partial failure; timezone logic; and per-item authorization. Each finding cites file and line and states the required fix. Do not spawn subagents of your own.
 
 If the skill is unavailable, report that exact failure and stop. Return only the review result.
-"""
-
-[[workflow.review_layers]]
-id = "codex-review"
-name = "Codex Review"
-when = "The diff touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from the file list in the diff file, not from the review mode."
-instruction = """
-Before launching, map the diff source chosen in step 1 to companion arguments and put them in place of CODEX_ARGS below. Uncommitted changes (staged and unstaged) are `--scope working-tree`. A branch diff is `--base <base branch>`. A commit range that ends at HEAD is `--base <start of the range>`; a commit SHA is accepted there. Staged changes only, a provided diff, a file list, or a range that ends before HEAD has no native Codex equivalent: skip this layer and say why in one line. Then launch a context-free subagent with this prompt:
-
-Run Codex's native review. The `/codex:review` command cannot be model-invoked, so call its companion script by path. Read `plugins["codex@openai-codex"][0].installPath` from `~/.claude/plugins/installed_plugins.json` (resolve `~` to `$HOME` or `%USERPROFILE%` first), then run this from the repository root, in the foreground with a 600000 ms timeout:
-
-node "<installPath>/scripts/codex-companion.mjs" review --wait CODEX_ARGS
-
-Return the command's output verbatim. If Codex says it could not inspect the change, return one line, `Codex review unavailable: <its reason>`, which is not a finding. If the file, the entry or the Codex CLI is missing, or the command fails or times out, report that exact failure in one line and stop. Do not fix anything, and do not spawn subagents of your own.
 """

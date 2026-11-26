@@ -17,7 +17,7 @@ Owner, 2026-11-26:
 - The three new skills install at project level only, under `.claude/skills/`. That folder stays git-ignored, so they are local to this machine.
 - Chrome's modern web guidance: a read-only copy of its guides, never its npm CLI.
 - From juliobsz/skills: both skills, jury and awwwards, installed and wired. The review's concern about awwwards was raised: it targets award-style marketing sites with heavy WebGL and scroll effects, which conflicts with the Cuatro contract's motion rules. The owner kept it, and section 2.3 sets the limits that make it safe here.
-- An independent Codex review layer runs in Build, gated by path (section 3.1).
+- No Codex review layer. One was wired first and dropped the same day: Codex's runtime on this host blocks every command it tries, so the layer gave no coverage.
 - Build commits and pushes to `origin main` itself after a verified change (the single-branch workflow in `AGENTS.md`).
 
 Defaults the owner can overrule:
@@ -107,11 +107,10 @@ Review layers, gated with `when` so that one run does not start eight review sub
 - ecc-verification-loop: always.
 - Design Review: apple-design, review-animations, and mobile-native, all read by path, plus the modern-web-guidance guides recorded in the spec's Design Notes. Runs when the diff touches `app/`, `components/`, or any CSS file.
 - security-audit, Guidance mode only (section 2.1). Runs when the diff touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/`, or `prisma/`.
-- codex-review: the same path gate as security-audit. The codex review commands are disable-model-invocation, so the layer calls the companion through its installed path.
 
 ### 3.2 bmad-code-review
 
-Graphify in activation, and the same layers as 3.1 (ponytail-review, Design Review, security-audit, codex-review). For Codex, map the diff source: `--scope working-tree` for uncommitted changes, and `--base <range start>` for a commit range. Check that the native reviewer accepts a commit SHA.
+Graphify in activation, and the same layers as 3.1 (ponytail-review, Design Review, security-audit).
 
 ### 3.3 bmad-review
 

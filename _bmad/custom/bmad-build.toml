@@ -27,9 +27,6 @@
 #   Project skills  security-audit, modern-web-guidance (Chrome's guides,
 #                   read-only), jury and awwwards, git-ignored in
 #                   .claude/skills/ at the commits the work order pins.
-#   Codex           plugin codex@openai-codex. The codex-review layer calls its
-#                   companion script by path, because /codex:review cannot be
-#                   model-invoked.
 #
 # Constitution rule order still holds: a tool recommendation never outranks
 # this repository's AGENTS.md.
@@ -126,20 +123,6 @@ Invoke the `security-audit` skill in Guidance mode only, for a focused review of
 If the skill is unavailable, report that exact failure and stop. Return only the review result.
 """
 
-[[workflow.review_layers]]
-id = "codex-review"
-name = "Codex Review"
-when = "The change touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from the file list of the diff file."
-instruction = """
-Launch a context-free subagent with this prompt:
-
-Run Codex's native review of the uncommitted change. The `/codex:review` command cannot be model-invoked, so call its companion script by path. Read `plugins["codex@openai-codex"][0].installPath` from `~/.claude/plugins/installed_plugins.json` (resolve `~` to `$HOME` or `%USERPROFILE%` first), then run this from the repository root, in the foreground with a 600000 ms timeout:
-
-node "<installPath>/scripts/codex-companion.mjs" review --wait --scope working-tree
-
-Return the command's output verbatim. If Codex says it could not inspect the change, return one line, `Codex review unavailable: <its reason>`, which is not a finding. If the file, the entry or the Codex CLI is missing, or the command fails or times out, report that exact failure in one line and stop. Do not fix anything, and do not spawn subagents of your own.
-"""
-
 # One-shot route: no diff file is staged and no tests run, so each layer reads
 # the changed files in the current worktree instead.
 
@@ -199,18 +182,4 @@ Launch a context-free subagent with this prompt:
 Invoke the `security-audit` skill in Guidance mode only, for a focused review of the changed files in the current worktree. Run `git status --short --untracked-files=all` and `git diff HEAD`, read each untracked file, and inspect them directly before reviewing. Guidance mode here means static review: read the source, and never run target code, never build a sandbox or container, and never change HOME, environment variables or the user profile. Run no six-phase audit, create no output directory and write no artifacts; a lead that would need execution stays `needs_validation`. Never open `.private/`, and never copy a secret or a private file into a finding. Weigh the business logic and access control attack classes first: negative, zero and overflow amounts; precision loss; check-then-act races; rollback after partial failure; timezone logic; and per-item authorization. Each finding cites file and line and states the required fix. Do not spawn subagents of your own.
 
 If the skill is unavailable, report that exact failure and stop. Return only the review result.
-"""
-
-[[workflow.oneshot_review_layers]]
-id = "codex-review"
-name = "Codex Review"
-when = "The changed files in the current worktree touch `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from `git status --short --untracked-files=all`."
-instruction = """
-Launch a context-free subagent with this prompt:
-
-Run Codex's native review of the uncommitted change. The `/codex:review` command cannot be model-invoked, so call its companion script by path. Read `plugins["codex@openai-codex"][0].installPath` from `~/.claude/plugins/installed_plugins.json` (resolve `~` to `$HOME` or `%USERPROFILE%` first), then run this from the repository root, in the foreground with a 600000 ms timeout:
-
-node "<installPath>/scripts/codex-companion.mjs" review --wait --scope working-tree
-
-Return the command's output verbatim. If Codex says it could not inspect the change, return one line, `Codex review unavailable: <its reason>`, which is not a finding. If the file, the entry or the Codex CLI is missing, or the command fails or times out, report that exact failure in one line and stop. Do not fix anything, and do not spawn subagents of your own.
 """
