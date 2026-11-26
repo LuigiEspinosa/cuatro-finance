@@ -1,7 +1,8 @@
 # Team override for bmad-code-review, per the tooling work order
 # (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
-# section 3.2): Graphify in activation, and the Ponytail, Design Review and
-# security-audit layers from bmad-build, each reading {diff_file}.
+# section 3.2): Graphify in activation, the Ponytail, Design Review and
+# security-audit layers from bmad-build, each reading {diff_file}, and the
+# fact that keeps unfixed security findings out of committed files.
 # The shipped layers stay; these merge by id and append.
 # Verify the merge with:
 #   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-code-review --project-root . --key workflow
@@ -10,6 +11,10 @@
 
 activation_steps_prepend = [
   """Graphify: run `graphify update .` from the repository root. It is incremental and AST only (no LLM), and it also builds the graph from nothing. Report its one-line node and edge count. In triage, follow a finding's callers with `graphify affected "<symbol>"` and `graphify path "A" "B"` before rendering a verdict, and read the files when the graph has nothing. If `graphify` is not on PATH, say so in one line and continue without the graph; it is an aid to investigation, not a gate.""",
+]
+
+persistent_facts = [
+  """This repository is public, and its unpatched security findings stay out of it: the re-entry assessment that lists them, `_bmad-output/planning-artifacts/research/reentry-assessment-2026-11-25.md`, is local and git-excluded. When a finding is a security gap that the reviewed change does not fix, no committed file (the story or spec, `deferred-work.md`, a commit subject) may carry its file, route, parameter, mechanism or rating: write it there only as `pre-existing security finding, tracked privately`, give the owner the details in the review presentation, and append the full finding under a dated heading at the end of the assessment, which is never staged. A gap the change fixes is described normally.""",
 ]
 
 [[workflow.review_layers]]

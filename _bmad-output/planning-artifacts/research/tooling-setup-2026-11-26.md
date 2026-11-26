@@ -100,6 +100,7 @@ Stamp `_bmad/custom/bmad-build.toml` with the `wire-bmad-build` skill (`~/.claud
 6. In verification-loop's secret scan, use `git grep -l --untracked`, so files a change creates are covered while the standard excludes keep `.private/` out. Report file names only, never matching lines, and repeat the scan before every push.
 7. The Cuatro token contract's motion durations win over the motion skills' defaults of under 300ms (the contract's `--dur-major` is 420ms).
 8. Host-provided skills (dataviz, the built-in security-review) may be missing in headless runs. Every fact and layer that uses one says to skip it with a note.
+9. The repository is public. A security gap that a review layer reports but the change does not fix reaches committed files (the spec's triage log, `deferred-work.md`) only as `pre-existing security finding, tracked privately`, with no file, route, parameter, mechanism, or rating. The full finding is appended under a dated heading at the end of the local, git-excluded re-entry assessment. A gap the change fixes is described normally, since the fix ships in the same push.
 
 Review layers, each gated with `when` so that a run starts only the reviews its diff needs:
 
@@ -110,7 +111,7 @@ Review layers, each gated with `when` so that a run starts only the reviews its 
 
 ### 3.2 bmad-code-review
 
-Graphify in activation, and the same layers as 3.1 (ponytail-review, Design Review, security-audit).
+Graphify in activation, the same layers as 3.1 (ponytail-review, Design Review, security-audit), and 3.1's fact 9 on security findings the change does not fix.
 
 ### 3.3 bmad-review
 
