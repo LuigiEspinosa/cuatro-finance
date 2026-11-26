@@ -1,0 +1,27 @@
+# Team override for bmad-ux, per the tooling work order
+# (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
+# section 3.4). Arrays append to the shipped defaults.
+# Verify the merge with:
+#   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-ux --project-root . --key workflow
+
+[workflow]
+
+persistent_facts = [
+  """The visual source of truth is the Cuatro design contract in `../cuatro-portfolio/contracts/` (tokens.css, fonts.css, tailwind.css, registry.json) together with the portfolio's UX spines in `../cuatro-portfolio/_bmad-output/planning-artifacts/ux-designs/ux-cuatro-portfolio-2026-08-15/` (DESIGN.md, EXPERIENCE.md). Read the sections a task needs rather than whole files; the UX step's prompt names the exact inputs.""",
+]
+
+creative_tools = [
+  """frontend-design, for aesthetic direction within the Cuatro contract: invoke `frontend-design:frontend-design`. The contract and the portfolio's UX spines outrank it.""",
+  """dataviz, for chart and KPI tile options: invoke the `dataviz` skill when a screen needs a chart. It is host-provided and may be missing in a headless run; if it is, say so in one line and continue.""",
+  """awwwards, for the concept and art direction of public showcase surfaces only (a landing page or the entry to the public demo, never a signed-in data screen): first read section 2.3 of `_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md`, whose limits win, then invoke the `awwwards` skill by name for its concept and art direction phases only. The Cuatro contract wins every conflict. The concept goes to a named file in the UX workspace, such as `awwwards-concept.md`, never DESIGN.md. Its brief never reads `.private/` or the re-entry assessment, and uses fictional figures with no personal details.""",
+]
+
+external_sources = [
+  """Chrome's modern web guidance, read locally: before committing a web platform behavior (a dialog, popover or menu, anchor positioning, view transitions, container queries, a form or autofill), Grep `.claude/skills/modern-web-guidance/guides/` for it, read the matching guide, and cite its id and Baseline status. Never run its npm CLI.""",
+]
+
+finalize_reviewers = [
+  """Apple design review: read `~/.claude/skills/apple-design/SKILL.md` (resolve `~` to `$HOME` or `%USERPROFILE%` first) and review DESIGN.md and EXPERIENCE.md against it. The Cuatro token contract and the portfolio's settled decisions win; report only the departures they do not settle.""",
+  """Mobile review: read `~/.claude/skills/mobile-native/SKILL.md` (resolve `~` to `$HOME` or `%USERPROFILE%` first) and review EXPERIENCE.md and the mockups for viewport, input, touch and safe-area behavior.""",
+  """jury on the promoted mockups, as evidence only: invoke the `jury` skill by name. Serve the mockups with its `serve.mjs`, which binds 127.0.0.1, or start the app with `pnpm start -p 4400 -H 127.0.0.1`, and stop the server when the run ends. Run its scripts from `~/.cache/jury` and never rerun `npm i` there or in the project. Write evidence only to `.jury/` and `.shots/`, and never point `--out` at a folder holding real images, since it deletes the `.png` files there. Report only: skip its closing offer to fix or redesign. Its scores are evidence, never a gate, because the rubric is tuned for award sites and rewards decorative motion. It cannot sign in, so it covers the mockups, the auth pages and a static Storybook build.""",
+]

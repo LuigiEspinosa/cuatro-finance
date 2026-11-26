@@ -1,0 +1,13 @@
+# Team override for bmad-qa-generate-e2e-tests, per the tooling work order
+# (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
+# section 3.7). Arrays append to the shipped defaults.
+# Verify the merge with:
+#   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-qa-generate-e2e-tests --project-root . --key workflow
+
+[workflow]
+
+persistent_facts = [
+  """Vitest 4 runs in the node environment (`vitest.config.ts`), with tests in `lib/__tests__/`. jsdom and Testing Library are installed but unused, so a component test opts in with a per-file `// @vitest-environment jsdom` comment.""",
+  """Use the `e2e-testing` and `ai-regression-testing` skills.""",
+  """`.gitignore` carries boilerplate patterns (`*test`, `*tests`, `*tmp`, `*temp`) that silently ignore any folder named `test` or `tests`. A new e2e folder needs a different name, or the code sync step fixes `.gitignore` first.""",
+]

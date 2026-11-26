@@ -1,0 +1,11 @@
+# Team override for bmad-create-epics-and-stories, per the tooling work order
+# (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
+# section 3.6). Arrays append to the shipped defaults.
+# Verify the merge with:
+#   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-create-epics-and-stories --project-root . --key workflow
+
+[workflow]
+
+persistent_facts = [
+  """Every UI story names, in its spec, the design skills and modern-web-guidance guides its implementer needs: `animate` for motion, `apple-design` for type and for hover, focus and press states, `mobile-native` for viewport, inputs and touch, `dataviz` for charts, `frontend-design` for a new screen, and the guide id for each web platform pattern. The story spec is how they reach Build's implementer, which starts with no other context.""",
+]

@@ -1,0 +1,216 @@
+# Team override for bmad-build. Written 2026-11-26 by /wire-bmad-build so every
+# Build run uses Ponytail, the ECC skills, Graphify, context-mode and the Emil
+# design skills, then corrected and extended by the tooling work order
+# (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
+# section 3.1).
+#
+# Merges over .claude/skills/bmad-build/customize.toml: lists append to the
+# shipped list, strings replace the shipped value, and both
+# [[workflow.review_layers]] and [[workflow.oneshot_review_layers]] merge by
+# id (the shipped layers stay; the ones below are added).
+# Verify the merge with:
+#   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-build --project-root . --key workflow
+#
+# What each tool is on this machine:
+#   Ponytail        plugin ponytail@ponytail. Its rules text arrives through
+#                   the plugin's hooks; `ponytail-review` is a review layer.
+#   ECC             workflow-quality module only, in ~/.claude/skills/. Build
+#                   uses `verification-loop` (review layer) and
+#                   `agent-self-evaluation` (on_complete).
+#   Graphify        CLI plus ~/.claude/skills/graphify. The graph lives in
+#                   graphify-out/ (gitignored) and is refreshed on activation.
+#   context-mode    plugin context-mode@context-mode. Build inherits its hooks;
+#                   the activation step only makes that visible.
+#   Emil skills     animate, apple-design, mobile-native and review-animations
+#                   in ~/.claude/skills/. The Design Review layer reads them by
+#                   path, since review-animations is not model-invocable.
+#   Project skills  security-audit, modern-web-guidance (Chrome's guides,
+#                   read-only), jury and awwwards, git-ignored in
+#                   .claude/skills/ at the commits the work order pins.
+#   Codex           plugin codex@openai-codex. The codex-review layer calls its
+#                   companion script by path, because /codex:review cannot be
+#                   model-invoked.
+#
+# Constitution rule order still holds: a tool recommendation never outranks
+# this repository's AGENTS.md.
+
+[workflow]
+
+activation_steps_prepend = [
+  """Graphify: run `graphify update .` from the repository root. It is incremental and AST only (no LLM), and it also builds the graph from nothing. Report its one-line node and edge count. If `graphify` is not on PATH, say so in one line and continue without the graph; it is an aid to investigation, not a gate.""",
+  """context-mode: if the `mcp__plugin_context-mode_context-mode__ctx_*` tools are available, route long command output, large file reads and web fetches through them for the whole run, as the routing injected at session start instructs. If they are absent, say so in one line and continue; do not install or repair anything mid-run.""",
+]
+
+persistent_facts = [
+  """Ponytail is on for this run. Apply its ladder before adding any file, dependency, abstraction, helper, config or feature: does it need to exist, is it already in this codebase, does the standard library do it, does the platform do it, does an installed dependency do it, is it one line. Only then write the smallest thing that works. Correctness, validation, error handling, accessibility and security are never what gets cut.""",
+  """Graphify is the first stop for structural questions. In step 2 (Investigate codebase) query the graph before reading files: `graphify query "<question>"` for how something is wired, `graphify affected "<symbol>"` for what a change reaches, `graphify path "A" "B"` for the chain between two symbols, `graphify explain "X"` for one node. Cite the `src=` locations it returns in the Code Map, then read only the files it named. If the graph has nothing on a topic, fall back to reading.""",
+  """ECC skills are installed at user level (~/.claude/skills/, workflow-quality module). Build runs `verification-loop` as a review layer and `agent-self-evaluation` on completion; any other ECC skill is on demand only. When an ECC skill's generic commands differ from this repository's verified ones in AGENTS.md, the verified ones win.""",
+  """Emil design skills are installed at user level (~/.claude/skills/). When the spec adds or changes motion in a frontend tree (a transition, an enter or exit, press feedback, a popover, dialog, drawer or sheet), invoke the `animate` skill before writing it and follow its decision order: should it animate at all, what purpose, which tool, which properties, which curve and duration, how it interrupts, how it exits. House rules it must respect: reuse the repository's motion tokens (none yet in this repository: the Cuatro token contract's `--dur-micro`, `--dur-minor`, `--dur-major`, `--dur-exit`, `--ease-entrance`, `--ease-exit` and `--ease-toggle`, defined in `../cuatro-portfolio/contracts/tokens.css`, are the vocabulary, so ask for them to be added before the first literal) rather than add a literal; animate transform and opacity only; take durations from the contract, whose values win over the skill's under-300ms default (`--dur-major` is 420ms); feedback on pointer-down; popovers scale from their trigger, modals stay centered; `prefers-reduced-motion` gates every duration. The Cuatro token contract and this project's design documents (the UX step's DESIGN.md and EXPERIENCE.md, once they exist) outrank the skill where they disagree. Where `animate` says to invoke `pick-ui-library` for a component, that skill is not installed: the repository's existing UI primitives are the component source, and a new dependency needs Ponytail's ladder. `apple-design` is what the Design Review layer measures the surface against, so read it before writing type, press feedback, hover or focus states rather than meeting it at review. `mobile-native` is on demand.""",
+  """Git in this repository (AGENTS.md): `main` is the only branch, so working on `main` is never a branch mismatch and step 1's version control check does not halt for it (a dirty tree still does). There are no pull requests: never create or offer one. After a verified change, commit with a Conventional Commit subject line only (`type(scope): summary`, one `-m`, no body, no trailer). Then re-run the verification commands on the final tree (`pnpm typecheck`, `pnpm test` and `pnpm exec eslint .`) and, only if all three pass, push with `git push origin main`. That push is the owner's standing instruction, so it overrides the steps' no-push rules in this repository. If a command fails or the push is rejected, report it and stop.""",
+  """Web platform guides: in step 2, for each web platform capability the spec touches (a dialog, popover or menu, anchor positioning, container queries, view transitions, a form, validation, autofill, Core Web Vitals), find the matching guide with Grep over `.claude/skills/modern-web-guidance/guides/` and record its id and Baseline status in the spec's Design Notes (on the one-shot route, in Implementation Notes), so the implementer and the Design Review layer read the same guide. Never run the modern-web-guidance npm CLI.""",
+]
+
+implementation_handoff = """
+Launch a subagent with no prior conversation context, with this prompt:
+
+> Read {spec_file} fully and implement it: the spec is the sole source of truth. Load every file listed in its frontmatter `context:` before you start.
+>
+> Before changing a symbol that has callers outside the spec's `context:` list, run `graphify affected "<symbol>"` from the repository root and read what it names. If `graphify` is unavailable, say so once and continue.
+>
+> Skills, only when the work calls for them (resolve `~` to `$HOME` or `%USERPROFILE%` before reading a file under it): for motion, invoke the `animate` skill first; for type, or hover, focus and press states, read `~/.claude/skills/apple-design/SKILL.md`; for viewport, inputs or touch, read `~/.claude/skills/mobile-native/SKILL.md`; for charts, use the `dataviz` skill, and if it is not available say so in one line and continue; for a UI pattern or its fallback, read the matching guide under `.claude/skills/modern-web-guidance/guides/` (the spec's Design Notes name it, or Grep a feature keyword there; never run its npm CLI); for a new screen, use `frontend-design:frontend-design`, ranked below the UX step's DESIGN.md and the Cuatro token contract; for a public showcase surface only, never a signed-in data screen, read `engine.md`, `nextjs.md`, `webgl.md` and `patterns.md` in `.claude/skills/awwwards/references/`, after reading the limits in section 2.3 of `_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md`, which win over those references.
+>
+> When done, report what you changed, how you verified it, and anything left incomplete or risky.
+"""
+
+on_complete = """
+Invoke the `agent-self-evaluation` skill on this Build run: score the completed spec and implementation on its five axes with concrete evidence per criterion, and append the scorecard with its ranked improvements to the completion summary. Do not re-run any verification for it.
+"""
+
+# Full route: each layer reads the staged unified diff at {diff_file}.
+
+[[workflow.review_layers]]
+id = "ponytail-review"
+name = "Ponytail Review"
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Invoke the `ponytail-review` skill and apply it to the change exactly as that skill specifies: one line per finding in its `L<line>: <tag> <what>. <replacement>.` format (or `<file>:L<line>: ...` across files), tags `delete:`, `stdlib:`, `native:`, `yagni:` and `shrink:` only, ending with `net: -<N> lines possible.` or `Lean already. Ship.` Over-engineering only; correctness, security and performance belong to the other layers.
+
+Review content: the unified diff at `{diff_file}`. Read that file; it is the content under review.
+
+If the skill is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.review_layers]]
+id = "ecc-verification-loop"
+name = "ECC Verification Loop"
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Invoke the `verification-loop` skill and run its phases against the current worktree, substituting this repository's verified commands for the skill's generic ones: types `pnpm typecheck` (the code imports the git-ignored `generated/prisma` client, so if that folder is missing report Types as Blocked with that reason, not FAIL), tests `pnpm test` (`vitest run`, which exits on its own; run all of it), lint `pnpm exec eslint .` (not `pnpm lint`: its `next lint` script stays broken until the code sync step fixes it). Build is not one of this repository's gates: report it as `N/A (not a verification gate, see AGENTS.md)` rather than FAIL. Skip the coverage threshold and report the test totals instead. In the security scan, search tracked files only, with `git grep -l`, and report file names only, never the matching lines. There is no `src/`, so point the console.log check at `app/`, `components/` and `lib/`. For the diff phase read the unified diff at `{diff_file}`, not `git diff HEAD~1`. Produce the skill's VERIFICATION REPORT with real command output excerpts. Never report a PASS you did not observe.
+
+If the skill is unavailable, report that exact failure and stop. Return only the verification report.
+"""
+
+[[workflow.review_layers]]
+id = "emil-review-animations"
+name = "Design Review"
+when = "The change touches a file under `app/` or `components/`, or any `.css` file. Decide from the file list of the diff file."
+instruction = """
+Before launching, replace GUIDE_IDS in the prompt below with the modern-web-guidance guide ids recorded in the spec's Design Notes, comma separated, or with `none recorded`. Then launch a context-free subagent with this prompt:
+
+First decide what this layer applies to. Read the unified diff at `{diff_file}` and scan its added and changed lines for two things. Surface: a `.css` or `.tsx` file changed, test files excluded. Motion: `transition`, `animat`, `@keyframes`, `transform`, `duration-`, `ease-`, `motion`, `useSpring`, `active:` or `data-[state=`. If neither is present, return exactly `No UI surface in this diff. Design review skipped.` and stop.
+
+Read every skill file under the user's home directory, resolving `~` to `$HOME` or `%USERPROFILE%` first. No skill is invoked: `review-animations` is not model-invocable, and reading keeps the layers uniform.
+
+If a surface changed, read `~/.claude/skills/apple-design/SKILL.md` and apply its sections 1 (response), 7 (spatial consistency), 14 (reduced motion), 15 (typography) and 16 (design foundations) to the changed lines: feedback on the press, enter and exit along the same path, reduced motion as a gentler equivalent rather than none, tracking and leading set per size rather than one value for all, specific labels, and every `:hover` rule gated on `@media (hover: hover)`. If the change touches the viewport meta tag, `100vh` or `dvh`, input font size, `touch-action`, overscroll or `safe-area-inset`, also read `~/.claude/skills/mobile-native/SKILL.md` and apply it.
+
+If motion is present, also read `~/.claude/skills/review-animations/SKILL.md` and `~/.claude/skills/review-animations/STANDARDS.md` and apply them exactly as written, except that the Cuatro token contract's durations win over their under-300ms default (the contract's `--dur-major` is 420ms).
+
+Guides recorded for this change: GUIDE_IDS. For each id, read `.claude/skills/modern-web-guidance/guides/<topic>/<id>.md` in the repository (Glob `**/<id>.md` under that folder finds it) and check that the changed lines follow its pattern and its fallback. Never run the modern-web-guidance npm CLI, and paraphrase a guide rather than quote it.
+
+Report in one Before / After / Why findings table, then the tiered verdict ending in Block or Approve, citing `file:line`. Two house rules narrow every standard. First, a value or behaviour that this project's design documents set (the Cuatro token contract, and the UX step's DESIGN.md and EXPERIENCE.md once they exist), or that a code comment documents as a deliberate tradeoff, is a settled decision: name it and do not report it. Second, every proposed fix must reuse the repository's motion tokens (none yet in this repository: the Cuatro token contract's `--dur-micro`, `--dur-minor`, `--dur-major`, `--dur-exit`, `--ease-entrance`, `--ease-exit` and `--ease-toggle`, defined in `../cuatro-portfolio/contracts/tokens.css`, are the vocabulary, so ask for them to be added before the first literal) or extend them, never introduce a literal. Design and motion only; correctness, security and performance belong to the other layers.
+
+If a skill file is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.review_layers]]
+id = "security-audit"
+name = "Security Audit (Guidance mode)"
+when = "The change touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from the file list of the diff file."
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Invoke the `security-audit` skill in Guidance mode only, for a focused review of the unified diff at `{diff_file}`. Read that file; it is the content under review. Guidance mode here means static review: read the source, and never run target code, never build a sandbox or container, and never change HOME, environment variables or the user profile. Run no six-phase audit, create no output directory and write no artifacts; a lead that would need execution stays `needs_validation`. Never open `.private/`, and never copy a secret or a private file into a finding. Weigh the business logic and access control attack classes first: negative, zero and overflow amounts; precision loss; check-then-act races; rollback after partial failure; timezone logic; and per-item authorization. Each finding cites file and line and states the required fix. Do not spawn subagents of your own.
+
+If the skill is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.review_layers]]
+id = "codex-review"
+name = "Codex Review"
+when = "The change touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from the file list of the diff file."
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Run Codex's native review of the uncommitted change. The `/codex:review` command cannot be model-invoked, so call its companion script by path. Read `plugins["codex@openai-codex"][0].installPath` from `~/.claude/plugins/installed_plugins.json` (resolve `~` to `$HOME` or `%USERPROFILE%` first), then run this from the repository root, in the foreground with a 600000 ms timeout:
+
+node "<installPath>/scripts/codex-companion.mjs" review --wait --scope working-tree
+
+Return the command's output verbatim. If Codex says it could not inspect the change, return one line, `Codex review unavailable: <its reason>`, which is not a finding. If the file, the entry or the Codex CLI is missing, or the command fails or times out, report that exact failure in one line and stop. Do not fix anything, and do not spawn subagents of your own.
+"""
+
+# One-shot route: no diff file is staged and no tests run, so each layer reads
+# the changed files in the current worktree instead.
+
+[[workflow.oneshot_review_layers]]
+id = "ponytail-review"
+name = "Ponytail Review"
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Invoke the `ponytail-review` skill and apply it to the change exactly as that skill specifies: one line per finding in its `L<line>: <tag> <what>. <replacement>.` format (or `<file>:L<line>: ...` across files), tags `delete:`, `stdlib:`, `native:`, `yagni:` and `shrink:` only, ending with `net: -<N> lines possible.` or `Lean already. Ship.` Over-engineering only; correctness, security and performance belong to the other layers.
+
+Review content: the changed files in the current worktree. Run `git status --short --untracked-files=all` and `git diff HEAD`, read each untracked file, and inspect them directly before reviewing.
+
+If the skill is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.oneshot_review_layers]]
+id = "ecc-verification-loop"
+name = "ECC Verification Loop"
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Invoke the `verification-loop` skill and run its phases against the current worktree, substituting this repository's verified commands for the skill's generic ones: types `pnpm typecheck` (the code imports the git-ignored `generated/prisma` client, so if that folder is missing report Types as Blocked with that reason, not FAIL), tests `pnpm test` (`vitest run`, which exits on its own; the one-shot route runs no tests of its own, so run all of it here), lint `pnpm exec eslint .` (not `pnpm lint`: its `next lint` script stays broken until the code sync step fixes it). Build is not one of this repository's gates: report it as `N/A (not a verification gate, see AGENTS.md)` rather than FAIL. Skip the coverage threshold and report the test totals instead. In the security scan, search tracked files only, with `git grep -l`, and report file names only, never the matching lines. There is no `src/`, so point the console.log check at `app/`, `components/` and `lib/`. For the diff phase use the changed files in the current worktree (`git status --short --untracked-files=all` and `git diff HEAD`, untracked files included), not `git diff HEAD~1`. Produce the skill's VERIFICATION REPORT with real command output excerpts. Never report a PASS you did not observe.
+
+If the skill is unavailable, report that exact failure and stop. Return only the verification report.
+"""
+
+[[workflow.oneshot_review_layers]]
+id = "emil-review-animations"
+name = "Design Review"
+when = "The changed files in the current worktree touch a file under `app/` or `components/`, or any `.css` file. Decide from `git status --short --untracked-files=all`."
+instruction = """
+Before launching, replace GUIDE_IDS in the prompt below with the modern-web-guidance guide ids recorded in the spec's Implementation Notes, comma separated, or with `none recorded`. Then launch a context-free subagent with this prompt:
+
+First decide what this layer applies to. Run `git status --short --untracked-files=all` and `git diff HEAD`, read each untracked file, and scan the added and changed lines for two things. Surface: a `.css` or `.tsx` file changed, test files excluded. Motion: `transition`, `animat`, `@keyframes`, `transform`, `duration-`, `ease-`, `motion`, `useSpring`, `active:` or `data-[state=`. If neither is present, return exactly `No UI surface in this diff. Design review skipped.` and stop.
+
+Read every skill file under the user's home directory, resolving `~` to `$HOME` or `%USERPROFILE%` first. No skill is invoked: `review-animations` is not model-invocable, and reading keeps the layers uniform.
+
+If a surface changed, read `~/.claude/skills/apple-design/SKILL.md` and apply its sections 1 (response), 7 (spatial consistency), 14 (reduced motion), 15 (typography) and 16 (design foundations) to the changed lines: feedback on the press, enter and exit along the same path, reduced motion as a gentler equivalent rather than none, tracking and leading set per size rather than one value for all, specific labels, and every `:hover` rule gated on `@media (hover: hover)`. If the change touches the viewport meta tag, `100vh` or `dvh`, input font size, `touch-action`, overscroll or `safe-area-inset`, also read `~/.claude/skills/mobile-native/SKILL.md` and apply it.
+
+If motion is present, also read `~/.claude/skills/review-animations/SKILL.md` and `~/.claude/skills/review-animations/STANDARDS.md` and apply them exactly as written, except that the Cuatro token contract's durations win over their under-300ms default (the contract's `--dur-major` is 420ms).
+
+Guides recorded for this change: GUIDE_IDS. For each id, read `.claude/skills/modern-web-guidance/guides/<topic>/<id>.md` in the repository (Glob `**/<id>.md` under that folder finds it) and check that the changed lines follow its pattern and its fallback. Never run the modern-web-guidance npm CLI, and paraphrase a guide rather than quote it.
+
+Report in one Before / After / Why findings table, then the tiered verdict ending in Block or Approve, citing `file:line`. Two house rules narrow every standard. First, a value or behaviour that this project's design documents set (the Cuatro token contract, and the UX step's DESIGN.md and EXPERIENCE.md once they exist), or that a code comment documents as a deliberate tradeoff, is a settled decision: name it and do not report it. Second, every proposed fix must reuse the repository's motion tokens (none yet in this repository: the Cuatro token contract's `--dur-micro`, `--dur-minor`, `--dur-major`, `--dur-exit`, `--ease-entrance`, `--ease-exit` and `--ease-toggle`, defined in `../cuatro-portfolio/contracts/tokens.css`, are the vocabulary, so ask for them to be added before the first literal) or extend them, never introduce a literal. Design and motion only; correctness, security and performance belong to the other layers.
+
+If a skill file is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.oneshot_review_layers]]
+id = "security-audit"
+name = "Security Audit (Guidance mode)"
+when = "The changed files in the current worktree touch `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from `git status --short --untracked-files=all`."
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Invoke the `security-audit` skill in Guidance mode only, for a focused review of the changed files in the current worktree. Run `git status --short --untracked-files=all` and `git diff HEAD`, read each untracked file, and inspect them directly before reviewing. Guidance mode here means static review: read the source, and never run target code, never build a sandbox or container, and never change HOME, environment variables or the user profile. Run no six-phase audit, create no output directory and write no artifacts; a lead that would need execution stays `needs_validation`. Never open `.private/`, and never copy a secret or a private file into a finding. Weigh the business logic and access control attack classes first: negative, zero and overflow amounts; precision loss; check-then-act races; rollback after partial failure; timezone logic; and per-item authorization. Each finding cites file and line and states the required fix. Do not spawn subagents of your own.
+
+If the skill is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.oneshot_review_layers]]
+id = "codex-review"
+name = "Codex Review"
+when = "The changed files in the current worktree touch `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from `git status --short --untracked-files=all`."
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Run Codex's native review of the uncommitted change. The `/codex:review` command cannot be model-invoked, so call its companion script by path. Read `plugins["codex@openai-codex"][0].installPath` from `~/.claude/plugins/installed_plugins.json` (resolve `~` to `$HOME` or `%USERPROFILE%` first), then run this from the repository root, in the foreground with a 600000 ms timeout:
+
+node "<installPath>/scripts/codex-companion.mjs" review --wait --scope working-tree
+
+Return the command's output verbatim. If Codex says it could not inspect the change, return one line, `Codex review unavailable: <its reason>`, which is not a finding. If the file, the entry or the Codex CLI is missing, or the command fails or times out, report that exact failure in one line and stop. Do not fix anything, and do not spawn subagents of your own.
+"""

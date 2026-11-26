@@ -1,0 +1,37 @@
+# Team override for bmad-review, per the tooling work order
+# (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
+# section 3.3). Lens subagents are told never to invoke a skill, so each lens
+# below reads its method by path. Lenses merge by code: these four codes are
+# new and append to the shipped lenses.
+# Verify the merge with:
+#   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-review --project-root . --key workflow
+
+[workflow]
+
+[[workflow.lenses]]
+code = "accessibility"
+name = "Accessibility"
+applies_to = "any"
+when = "UI code, markup or styles, and user-facing documents such as DESIGN.md, EXPERIENCE.md or a UI story."
+instruction = """Review against WCAG 2.1 AA, in plain text with no skill: text contrast for each color token pair, visible focus, keyboard reach, reduced motion, form errors that are identified and recoverable, and how a screen reader announces money amounts in Colombian pesos. Emit findings in the canonical fields."""
+
+[[workflow.lenses]]
+code = "ponytail"
+name = "Ponytail"
+applies_to = "code"
+when = "Code or diffs."
+instruction = """Read the ponytail-review method by path: take `plugins["ponytail@ponytail"][0].installPath` from `~/.claude/plugins/installed_plugins.json` (resolve `~` to `$HOME` or `%USERPROFILE%` first), read `<installPath>/skills/ponytail-review/SKILL.md`, and apply it to the content exactly as written, over-engineering only. Keep its one-line finding format; that shape wins for this lens. If the file is unreadable, report that exact failure and stop."""
+
+[[workflow.lenses]]
+code = "security"
+name = "Security (Guidance mode)"
+applies_to = "code"
+when = "Code that touches auth, sessions, money, database access, API routes, validators, dependencies or secrets."
+instruction = """Read `.claude/skills/security-audit/SKILL.md` and `.claude/skills/security-audit/ATTACK-CLASSES.md` in the repository by path, and apply them in Guidance mode only: static review of the content; never run target code, never build a sandbox or container, never change HOME, environment variables or the user profile, and write no artifacts. Never open `.private/`, and never copy a secret or a private file into a finding. Weigh the business logic and access control classes first: negative, zero and overflow amounts; precision loss; check-then-act races; rollback after partial failure; timezone logic; and per-item authorization. Each finding cites file and line and states the required fix, in the canonical fields."""
+
+[[workflow.lenses]]
+code = "modern-web"
+name = "Modern Web"
+applies_to = "code"
+when = "HTML, CSS or client-side TSX that uses a web platform feature."
+instruction = """For each web platform feature the content uses (a dialog, popover or menu, anchor positioning, container queries, view transitions, a form, validation, autofill, loading performance), Grep a keyword over `.claude/skills/modern-web-guidance/guides/`, read the matching guide, and report where the content departs from its pattern or lacks its fallback, citing the guide id. Never run the modern-web-guidance npm CLI or the upstream legacy-scan. Paraphrase a guide rather than quote it. Emit findings in the canonical fields."""

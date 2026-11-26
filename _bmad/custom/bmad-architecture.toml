@@ -1,0 +1,19 @@
+# Team override for bmad-architecture, per the tooling work order
+# (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
+# section 3.5). Arrays append to the shipped defaults.
+# Verify the merge with:
+#   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-architecture --project-root . --key workflow
+
+[workflow]
+
+activation_steps_prepend = [
+  """Graphify: run `graphify update .` from the repository root. It is incremental and AST only (no LLM). Report its one-line node and edge count. For structural questions about this existing codebase, query the graph first (`graphify query "<question>"`, `graphify affected "<symbol>"`, `graphify path "A" "B"`), then read only the files it names. If `graphify` is not on PATH, say so in one line and continue; it is an aid, not a gate.""",
+]
+
+external_sources = [
+  """Chrome's modern web guidance, read locally: when an AD commits to a browser feature, Grep `.claude/skills/modern-web-guidance/guides/` for it, read the matching guide, and cite its id and Baseline status. Use the guides to state the browser support policy the architecture sets: which Baseline level the app targets, and how a feature outside it falls back. Never run the npm CLI.""",
+]
+
+finalize_reviewers = [
+  """Security review in Guidance mode: read `.claude/skills/security-audit/SKILL.md` and `.claude/skills/security-audit/ATTACK-CLASSES.md` by path and threat-model the spine in Guidance mode only: static review, never run code, build a sandbox or change HOME, environment variables or the user profile, write no artifacts, and never open `.private/`. Cover auth and sessions, money precision, database access, API routes and personal financial data, weighing the business logic and access control classes first (negative, zero and overflow amounts; precision loss; check-then-act races; rollback after partial failure; timezone logic; per-item authorization). Each finding names the AD it attacks and the change it requires.""",
+]

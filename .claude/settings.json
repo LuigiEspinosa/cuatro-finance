@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(npx *modern-web-guidance*)",
+      "Bash(pnpx *modern-web-guidance*)",
+      "Bash(pnpm dlx *modern-web-guidance*)",
+      "Bash(npm exec *modern-web-guidance*)",
+      "PowerShell(npx *modern-web-guidance*)",
+      "PowerShell(pnpx *modern-web-guidance*)",
+      "PowerShell(pnpm dlx *modern-web-guidance*)",
+      "PowerShell(npm exec *modern-web-guidance*)"
+    ]
+  },
+  "skillOverrides": {
+    "awwwards": "name-only",
+    "jury": "name-only"
+  }
+}

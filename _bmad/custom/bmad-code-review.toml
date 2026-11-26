@@ -1,0 +1,74 @@
+# Team override for bmad-code-review, per the tooling work order
+# (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
+# section 3.2): Graphify in activation, and the Ponytail, Design Review,
+# security-audit and Codex layers from bmad-build, each reading {diff_file}.
+# The shipped layers stay; these merge by id and append.
+# Verify the merge with:
+#   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-code-review --project-root . --key workflow
+
+[workflow]
+
+activation_steps_prepend = [
+  """Graphify: run `graphify update .` from the repository root. It is incremental and AST only (no LLM), and it also builds the graph from nothing. Report its one-line node and edge count. In triage, follow a finding's callers with `graphify affected "<symbol>"` and `graphify path "A" "B"` before rendering a verdict, and read the files when the graph has nothing. If `graphify` is not on PATH, say so in one line and continue without the graph; it is an aid to investigation, not a gate.""",
+]
+
+[[workflow.review_layers]]
+id = "ponytail-review"
+name = "Ponytail Review"
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Invoke the `ponytail-review` skill and apply it to the change exactly as that skill specifies: one line per finding in its `L<line>: <tag> <what>. <replacement>.` format (or `<file>:L<line>: ...` across files), tags `delete:`, `stdlib:`, `native:`, `yagni:` and `shrink:` only, ending with `net: -<N> lines possible.` or `Lean already. Ship.` Over-engineering only; correctness, security and performance belong to the other layers.
+
+Review content: the unified diff at `{diff_file}`. Read that file; it is the content under review.
+
+If the skill is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.review_layers]]
+id = "emil-review-animations"
+name = "Design Review"
+when = "The diff touches a file under `app/` or `components/`, or any `.css` file. Decide from the file list in the diff file, not from the review mode."
+instruction = """
+Before launching, replace GUIDE_IDS in the prompt below with the modern-web-guidance guide ids recorded in the Design Notes of `{spec_file}` when a spec is loaded, comma separated, or with `none recorded`. Then launch a context-free subagent with this prompt:
+
+First decide what this layer applies to. Read the unified diff at `{diff_file}` and scan its added and changed lines for two things. Surface: a `.css` or `.tsx` file changed, test files excluded. Motion: `transition`, `animat`, `@keyframes`, `transform`, `duration-`, `ease-`, `motion`, `useSpring`, `active:` or `data-[state=`. If neither is present, return exactly `No UI surface in this diff. Design review skipped.` and stop.
+
+Read every skill file under the user's home directory, resolving `~` to `$HOME` or `%USERPROFILE%` first. No skill is invoked: `review-animations` is not model-invocable, and reading keeps the layers uniform.
+
+If a surface changed, read `~/.claude/skills/apple-design/SKILL.md` and apply its sections 1 (response), 7 (spatial consistency), 14 (reduced motion), 15 (typography) and 16 (design foundations) to the changed lines: feedback on the press, enter and exit along the same path, reduced motion as a gentler equivalent rather than none, tracking and leading set per size rather than one value for all, specific labels, and every `:hover` rule gated on `@media (hover: hover)`. If the change touches the viewport meta tag, `100vh` or `dvh`, input font size, `touch-action`, overscroll or `safe-area-inset`, also read `~/.claude/skills/mobile-native/SKILL.md` and apply it.
+
+If motion is present, also read `~/.claude/skills/review-animations/SKILL.md` and `~/.claude/skills/review-animations/STANDARDS.md` and apply them exactly as written, except that the Cuatro token contract's durations win over their under-300ms default (the contract's `--dur-major` is 420ms).
+
+Guides recorded for this change: GUIDE_IDS. For each id, read `.claude/skills/modern-web-guidance/guides/<topic>/<id>.md` in the repository (Glob `**/<id>.md` under that folder finds it) and check that the changed lines follow its pattern and its fallback. Never run the modern-web-guidance npm CLI, and paraphrase a guide rather than quote it.
+
+Report in one Before / After / Why findings table, then the tiered verdict ending in Block or Approve, citing `file:line`. Two house rules narrow every standard. First, a value or behaviour that this project's design documents set (the Cuatro token contract, and the UX step's DESIGN.md and EXPERIENCE.md once they exist), or that a code comment documents as a deliberate tradeoff, is a settled decision: name it and do not report it. Second, every proposed fix must reuse the repository's motion tokens (none yet in this repository: the Cuatro token contract's `--dur-micro`, `--dur-minor`, `--dur-major`, `--dur-exit`, `--ease-entrance`, `--ease-exit` and `--ease-toggle`, defined in `../cuatro-portfolio/contracts/tokens.css`, are the vocabulary, so ask for them to be added before the first literal) or extend them, never introduce a literal. Design and motion only; correctness, security and performance belong to the other layers.
+
+If a skill file is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.review_layers]]
+id = "security-audit"
+name = "Security Audit (Guidance mode)"
+when = "The diff touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from the file list in the diff file, not from the review mode."
+instruction = """
+Launch a context-free subagent with this prompt:
+
+Invoke the `security-audit` skill in Guidance mode only, for a focused review of the unified diff at `{diff_file}`. Read that file; it is the content under review. Guidance mode here means static review: read the source, and never run target code, never build a sandbox or container, and never change HOME, environment variables or the user profile. Run no six-phase audit, create no output directory and write no artifacts; a lead that would need execution stays `needs_validation`. Never open `.private/`, and never copy a secret or a private file into a finding. Weigh the business logic and access control attack classes first: negative, zero and overflow amounts; precision loss; check-then-act races; rollback after partial failure; timezone logic; and per-item authorization. Each finding cites file and line and states the required fix. Do not spawn subagents of your own.
+
+If the skill is unavailable, report that exact failure and stop. Return only the review result.
+"""
+
+[[workflow.review_layers]]
+id = "codex-review"
+name = "Codex Review"
+when = "The diff touches `middleware.ts` or `proxy.ts`, `lib/auth.ts`, `lib/auth-client.ts`, `lib/api-auth.ts`, `lib/crypto.ts`, `lib/db.ts`, `lib/db/`, `lib/money.ts`, `lib/validators/`, `app/api/`, `app/(auth)/` or `prisma/`. Decide from the file list in the diff file, not from the review mode."
+instruction = """
+Before launching, map the diff source chosen in step 1 to companion arguments and put them in place of CODEX_ARGS below. Uncommitted changes (staged and unstaged) are `--scope working-tree`. A branch diff is `--base <base branch>`. A commit range that ends at HEAD is `--base <start of the range>`; a commit SHA is accepted there. Staged changes only, a provided diff, a file list, or a range that ends before HEAD has no native Codex equivalent: skip this layer and say why in one line. Then launch a context-free subagent with this prompt:
+
+Run Codex's native review. The `/codex:review` command cannot be model-invoked, so call its companion script by path. Read `plugins["codex@openai-codex"][0].installPath` from `~/.claude/plugins/installed_plugins.json` (resolve `~` to `$HOME` or `%USERPROFILE%` first), then run this from the repository root, in the foreground with a 600000 ms timeout:
+
+node "<installPath>/scripts/codex-companion.mjs" review --wait CODEX_ARGS
+
+Return the command's output verbatim. If Codex says it could not inspect the change, return one line, `Codex review unavailable: <its reason>`, which is not a finding. If the file, the entry or the Codex CLI is missing, or the command fails or times out, report that exact failure in one line and stop. Do not fix anything, and do not spawn subagents of your own.
+"""

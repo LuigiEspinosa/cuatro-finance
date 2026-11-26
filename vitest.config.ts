@@ -1,10 +1,12 @@
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import path from "path";
 
 export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    // Project-level Claude skills ship their own tests; never collect them.
+    exclude: [...configDefaults.exclude, ".claude/**"],
     env: {
       // Provides a valid key for all tests that import lib/crypto.ts
       ENCRYPTION_KEY:

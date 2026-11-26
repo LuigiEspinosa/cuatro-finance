@@ -1,0 +1,11 @@
+# Team override for bmad-prd, per the tooling work order
+# (_bmad-output/planning-artifacts/research/tooling-setup-2026-11-26.md,
+# section 3.8): product-lens joins the reviewer gate's menu.
+# Verify the merge with:
+#   uv run _bmad/scripts/resolve_customization.py --skill .claude/skills/bmad-prd --project-root . --key workflow
+
+[workflow]
+
+finalize_reviewers = [
+  "skill:product-lens",
+]
