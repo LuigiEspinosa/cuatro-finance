@@ -186,7 +186,7 @@ The steps follow the order of assessment §4. Run typecheck and tests after each
 - **U1.** next and eslint-config-next to 16.4.6 (exact pins); react and react-dom to 19.3.1. Next.js is at 16.4.5 today.
 - **U2.** better-auth to 1.7.28, the version whose MCP and passkey packages are usable (they need ^1.7.28 as a peer). This closes the auth part of issue 36.
   - The two-factor table gains three columns, so a migration is required, and the enable call's response type changes, which breaks a type in the TOTP setup form. Both the schema change and the type break were found by reading the published packages, and typecheck confirms them during U2.
-  - Without the migration, TOTP verification can fail for the owner, so a backup and a passing manual restore check come first (FR-15; `prd.md` §10).
+  - Without the migration, TOTP verification can fail for the owner, so a backup, a passing manual restore check (FR-15), and a passing run of the FR-63 recovery drill come first (`prd.md` §10).
 - **U3.** Dev tooling: storybook 10.6.9, vite 7.3.8, vitest 4.1.12, zod 4.6.7, shadcn 4.23.1; jsdom is already removed. This closes the vite part of issue 36. Since the redesign builds the contract's vocabulary natively (FR-58), the architecture step decides whether shadcn and storybook stay at all.
 - **U4.** prisma, @prisma/client, and @prisma/adapter-pg to ^7.10.1. Never install @latest here: npm's latest tag for prisma points at an 8.0.0 release candidate.
 - **U5.** Node 24 LTS is already pinned in engines and packageManager; align @types/node with it.
@@ -247,8 +247,8 @@ From a digest of the Cuatro design contract (cuatro-portfolio, contract 2.0.0), 
 - Data: performance is budgeted for 20.000 transactions (NFR-9), one owner, and a handful of accounts.
 - Running cost: free tiers for email and prices, keyless TRM and UVR sources, and one small VPS (NFR-12).
 - Release 1, the working ledger (`prd.md` §10, T-01), launches at its first deploy and builds its screens on the contract. It covers:
-  - `prd.md` §5.1 to §5.4
-  - Categories, rules, and the review queue (FR-30 to FR-32)
+  - `prd.md` §5.1 to §5.4, except FR-29's Release 2 part
+  - Categories, rules, and the review queue (FR-30 to FR-32, except FR-32's Release 2 part)
   - The record-keeping half of FR-36 and FR-37 (cuota counts, purchase rates and dated card rates, due days, statement minimums, and payment splits)
   - A minimal dashboard (FR-45)
   - The payment due, new client, backup, repeated failed attempts, and write limit alerts, always on (FR-48, FR-54, FR-64)
@@ -260,4 +260,5 @@ From a digest of the Cuatro design contract (cuatro-portfolio, contract 2.0.0), 
   - The rest of the dashboard, net worth history, and the spending report (FR-45 to FR-47)
   - The other alert types, alert toggles, and the weekly digest (FR-48, FR-49)
   - The other compute tools (FR-53)
+  - The Release 2 parts of FR-29 and FR-32: the statement expected alert, FR-32's occurrence items, and, once FR-42 starts, subscription price changes
   - Subscription detection (FR-42), which waits for six months of history (T-09)
