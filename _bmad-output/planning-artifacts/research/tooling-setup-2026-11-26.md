@@ -117,7 +117,7 @@ Graphify in activation, the same layers as 3.1 (ponytail-review, Design Review, 
 
 Its lens subagents are told never to invoke a skill, so each lens reads its method by path:
 
-- accessibility: plain text, WCAG 2.1 AA;
+- accessibility: plain text, WCAG 2.2 AA with the six A and AA criteria new in 2.2 (raised from 2.1 AA by the owner's PRD decision of 2026-11-26);
 - ponytail: the ponytail-review SKILL.md;
 - security: security-audit's attack classes, in Guidance mode;
 - modern-web: Grep over the guides folder, never the upstream legacy-scan.

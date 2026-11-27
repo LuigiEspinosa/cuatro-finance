@@ -13,7 +13,7 @@ code = "accessibility"
 name = "Accessibility"
 applies_to = "any"
 when = "UI code, markup or styles, and user-facing documents such as DESIGN.md, EXPERIENCE.md or a UI story."
-instruction = """Review against WCAG 2.1 AA, in plain text with no skill: text contrast for each color token pair, visible focus, keyboard reach, reduced motion, form errors that are identified and recoverable, and how a screen reader announces money amounts in Colombian pesos. Emit findings in the canonical fields."""
+instruction = """Review against WCAG 2.2 AA (the PRD's NFR-3), in plain text with no skill: text contrast for each color token pair, visible focus that no sticky header or overlay hides (2.4.11), keyboard reach, target size (2.5.8, where the Cuatro contract's 44px floor is stricter and wins), a single-pointer alternative to every drag (2.5.7), help in the same relative order on every page that offers it (3.2.6), nothing already entered asked for again in the same process (3.3.7), password and TOTP fields that accept paste and password managers (3.3.8), reduced motion, form errors that are identified and recoverable, and how a screen reader announces money amounts in Colombian pesos. Emit findings in the canonical fields."""
 
 [[workflow.lenses]]
 code = "ponytail"
