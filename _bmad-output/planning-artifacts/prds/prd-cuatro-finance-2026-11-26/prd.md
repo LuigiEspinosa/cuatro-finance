@@ -2,7 +2,7 @@
 title: Cuatro Finance
 status: final
 created: 2026-11-26
-updated: 2026-11-26
+updated: 2026-11-27
 ---
 
 # PRD: Cuatro Finance
@@ -16,7 +16,7 @@ Features (§5) group the functional requirements, numbered FR-1 to FR-65 across 
 - **built**: exists and works today.
 - **built but broken**: exists, with defects this PRD requires fixed.
 - **new**: not built, or present only as schema or scaffold.
-- **baseline**: a security requirement, stated only as the required behavior with a pointer to the assessment section.
+- **baseline**: a security requirement, stated only as the required behavior with a pointer to its source: an assessment section, a deferred item (FR-9), or the reviewer gate (FR-64).
 
 Cross-cutting NFRs (§6), constraints (§7), non-goals (§8), MVP scope (§9), sequencing (§10), success metrics (§11), open questions (§12), and an assumptions index (§13) follow. The MVP ships in two releases: Release 1, the working ledger, whose first deploy is launch; and Release 2, the planning features, after a go/no-go point. §9.3 assigns every FR to a release, and §10 sets the binding sequence. Assumptions carry an ID (A-n) where they appear, and §13 indexes them; the owner confirmed A-1 to A-10 on 2026-11-26, and confirmed A-11 to A-15, added at the reviewer gate, as defaults that the epic building each one revisits.
 
@@ -71,7 +71,7 @@ Mariana is fictional, and so is every detail and number below. She is 34, a UX r
   Capabilities: FR-20, FR-24, FR-31, FR-33, FR-41, FR-54, FR-55, FR-56.
 
 - **UJ-4. Mariana's card statement arrives and she asks how far she can go.**
-  The card offers no spreadsheet export, so she unlocks the statement PDF, drops it into Claude Desktop, and asks: "How bad is my debt, and should I pay just the minimum or can we afford more?" Claude reads the statement and stages its 23 rows: 9 match transactions she had told Claude about, 2 are later cuotas of purchases already in the ledger and link to them, 1 is a near duplicate, and 11 are new, including a laptop stand bought in 6 cuotas. She says go ahead; Claude confirms the import and enters the statement's closing balance, minimum payment, and payment due date. The closing balance equals the cleared balance, and the reconciliation waits in the review queue until she confirms that closing balance with one tap in the app. Claude then asks the app for her debts and this month's payment plan: COP 23.400.000 of debt across both cards, the car loan, and the mortgage, with COP 1.960.000 of minimum payments due. It compares avalanche and snowball, which both put the extra on the card first, and runs two payment scenarios for the card: the minimum, or the minimum plus COP 300.000 a month, which the scenario reports as paying the card off 7 months sooner with COP 640.000 less interest while the paying account's lowest balance stays above its cash buffer. Claude recommends the extra 300.000, quoting the figures and the provenance line the compute response returned. She agrees; Claude saves it as her monthly extra, paid from her main COP savings account, and the payment plan and forecast update. **Edge case:** if the extra would take the paying account below its cash buffer on any of the next 90 days, the scenario says so and Claude proposes a smaller amount.
+  The card offers no spreadsheet export, so she unlocks the statement PDF, drops it into Claude Desktop, and asks: "How bad is my debt, and should I pay just the minimum or can we afford more?" Claude reads the statement and stages its 23 rows: 9 match transactions she had told Claude about, 2 are later cuotas of purchases already in the ledger and link to them, 1 is a near duplicate, and 11 are new, including a laptop stand bought in 6 cuotas. She says go ahead; Claude confirms the import and enters the statement's closing balance, minimum payment, and payment due date, which wait in the review queue. She confirms the statement entry with one tap in the app; the closing balance equals the cleared balance, so the card reconciles. Claude then asks the app for her debts and this month's payment plan: COP 23.400.000 of debt across both cards, the car loan, and the mortgage, with COP 1.960.000 of minimum payments due. It compares avalanche and snowball, which both put the extra on the card first, and runs two payment scenarios for the card: the minimum, or the minimum plus COP 300.000 a month, which the scenario reports as paying the card off 7 months sooner with COP 640.000 less interest while the paying account's lowest balance stays above its cash buffer. Claude recommends the extra 300.000, quoting the figures and the provenance line the compute response returned. She agrees; Claude saves it as her monthly extra, paid from her main COP savings account, and the payment plan and forecast update. **Edge case:** if the extra would take the paying account below its cash buffer on any of the next 90 days, the scenario says so and Claude proposes a smaller amount.
   Capabilities: FR-27, FR-28, FR-29, FR-32, FR-36, FR-38, FR-39, FR-40, FR-43, FR-44, FR-53, FR-54, FR-65.
 
 - **UJ-5. Mariana imports her bank's export in the app.**
@@ -104,10 +104,10 @@ Downstream workflows and readers use these terms exactly. No other section intro
 - **Scope**: a permission a connected client holds: read, or write. Write scope always comes with read scope.
 - **Tool**: one operation the AI connection exposes. Tools come in three families: read, compute, and write.
 - **Audit log**: the record of every tool call (client, tool, time, inputs) and of every write from any source (with before and after values).
-- **Provenance**: who entered a record (the owner in the app, Claude through a named connected client, or an import) and, for a Claude-entered input, whether the owner has confirmed it (FR-65).
+- **Provenance**: who entered an input that figures rest on (the owner in the app, Claude through a named connected client, or an import) and, for a Claude-entered input, whether the owner has confirmed it. FR-65 lists the inputs that carry provenance.
 - **Provenance line**: the short line a compute response carries for Claude to quote: the figure's source, the money layer, and the dates of the rates and prices it used (FR-53).
 - **Statement text**: text a third party wrote that the ledger stores, such as a merchant descriptor, a transfer description, or a file's contents. It is data, never an instruction (§7.2).
-- **Void**: a reversible cancellation. A voided record stays in history but no longer counts, and takes no part in matching.
+- **Void**: a reversible cancellation, and what undoing a record's creation leaves (FR-55). A voided record stays in history but no longer counts, and takes no part in matching or duplicate checks.
 - **Undo**: reverting one logged write call as a unit (FR-55).
 - **Capability gap**: a request that no tool covers.
 
@@ -134,10 +134,11 @@ Downstream workflows and readers use these terms exactly. No other section intro
 - **Installment schedule**: the principal and interest (and, for a loan, the fixed charges) of each cuota of a cuota purchase or each installment of a loan or mortgage, computed by the amortization method or entered from the lender's statement.
 - **Statement**: an institution's periodic document for one account. A card statement shows the statement cut day, the payment due date, the minimum payment, and the cuota purchases.
 - **Statement period**: the days a statement covers: from the day after the previous statement's closing date (for the first, the day after the opening date) through its own closing date.
+- **Statement entry**: the values entered for one statement: its closing balance and closing date and, for a card, its minimum payment and printed payment due date. When Claude enters them, they wait for one confirmation by the owner (FR-29, FR-65).
 - **Statement cut day**: the day a card's billing period closes (fecha de corte).
 - **Payment due day**: the day of the month a card's or a loan's payment falls due. Each month's payment due date derives from it, unless a statement prints the date; a derived date on a weekend or holiday moves by the shift in the account terms, to the previous business day by default.
 - **Payment due date**: the last day to pay a card or an installment without late charges (fecha límite de pago): the date a statement prints, or else the one derived from the payment due day.
-- **Minimum payment**: the least the owner must pay by the payment due date: the statement's figure, or between statements an estimate (R-6).
+- **Minimum payment**: the least the owner must pay by the payment due date. For a card, the statement's figure, or between statements an estimate (R-6); for a loan or the mortgage, its installment, or the lender's figure when a statement gives one.
 - **Extra payment rule**: a setting on a liability saying whether a payment above what is due shortens the remaining term (or the cuotas) or lowers the installment (or the cuota).
 
 **Transactions and capture**
@@ -152,13 +153,15 @@ Downstream workflows and readers use these terms exactly. No other section intro
 - **Staged row**: an imported row that is parsed and checked but not yet posted. Each gets one class: duplicate, match, near duplicate, or new, tested in that order (FR-28).
 - **Column mapping**: the saved description of one account's statement file format: which columns hold the date, the description, and the amount (or separate debit and credit columns, and any cuota count and cuota number columns), the sign convention, the lines to skip above and below the table, and the number and date formats.
 - **Description key**: a description lowercased, with accents removed and runs of spaces collapsed to one.
-- **Duplicate**: a staged row with the same account, date, amount, and description key as a transaction a statement row has already confirmed. It is skipped and listed.
-- **Match**: a staged row paired, one to one, with a transaction on the same account that no statement row has confirmed, whatever its source, with the same amount and a date inside the match window (A-5); a Claude capture close in amount is offered as a match for review (FR-28). Confirming it keeps one transaction, now cleared.
-- **Near duplicate**: a staged row with the same account, date, and amount as a transaction a statement row has already confirmed, but a different description key. It is flagged for review.
-- **Cleared**: said of a transaction a statement row has confirmed, by a match or by posting from that row. The cleared balance counts only cleared transactions.
-- **Reconciliation**: comparing a statement's closing balance with the account's cleared balance at the statement's closing date; uncleared transactions in the statement period show as pending, not as a difference (FR-29).
+- **Consumed row**: a statement row the ledger has already used: posted, matched, linked as a later cuota or a transfer side, or kept skipped by the owner. Each is kept with its account, date, amount, and description key, unchanged by later edits and by what later happens to its transaction (FR-28).
+- **Duplicate**: a staged row with the same account, date, amount, and description key as a consumed row. It is skipped and listed.
+- **Match**: a staged row paired, one to one, with a transaction on the same account that no statement row has confirmed, whatever its source, with the same amount and a date inside the match window (A-5); a Claude capture close in amount is offered as a match for review (FR-28). Confirming it keeps one transaction, now cleared, at the row's amount.
+- **Near duplicate**: a staged row with the same account, date, and amount as a consumed row, but a different description key. It is flagged for review.
+- **Likely duplicate**: a transaction on the same account with the same amount inside the match window (A-5), which manual entry and a Claude record call show before storing a new one (FR-11, FR-56).
+- **Cleared**: said of a transaction a statement row has confirmed, by a match or by posting from that row. The cleared balance is the opening balance or starting debt, plus the adjustments in force, plus the cleared transactions, each placed by the date of the row that cleared it (FR-29).
+- **Reconciliation**: comparing a statement's closing balance with the account's cleared balance at the statement's closing date, each cleared transaction placed by the date of the row that cleared it; uncleared transactions in the statement period show as pending, not as a difference (FR-29).
 - **Current through date**: the closing date of an account's last reconciled statement, shown beside the date of the newest transaction Claude or the owner captured on it (FR-45).
-- **Review queue**: the items waiting for the owner's decision, listed with their resolutions in FR-32: uncategorized transactions, near duplicates, matches to confirm, unmatched Claude captures, unmatched transfer candidates, Claude-entered account terms and closing balances, expected statements, re-locked rates, and, from Release 2, occurrences to fulfil or to confirm as missed.
+- **Review queue**: the items waiting for the owner's decision, listed with their resolutions in FR-32: uncategorized transactions, near duplicates, matches to confirm, unmatched Claude captures, unmatched transfer candidates, Claude-entered inputs awaiting the owner's confirmation (FR-65), expected statements, re-locked rates, loan and mortgage payments awaiting their split, statement rows whose matched transaction Claude voided, and, from Release 2, occurrences to fulfil or to confirm as missed and, once FR-42 starts, subscription price changes.
 - **Category**: a label for spending or income.
 - **Rule**: a stored pattern that assigns a category to matching transactions.
 
@@ -167,12 +170,14 @@ Downstream workflows and readers use these terms exactly. No other section intro
 - **Budget**: a monthly spending limit for one category. A limit carries forward to later months until changed.
 - **Threshold**: the percentage of a budget's limit at which an alert fires, 80 percent by default.
 - **Budget history**: each closed month's frozen limit and its actual spending per category, which always reflects the ledger (FR-34).
-- **Goal**: a target amount by a target date, funded by contributions into a funding account.
-- **Goal plan**: the compute result for a goal: the monthly contribution needed, whether planned contributions keep it on track, and any month where a contribution would take the account it comes from below its cash buffer (FR-35).
+- **Goal**: a target amount in a currency by a target date, funded by contributions into a funding account, which is a COP or USD savings account.
+- **Goal plan**: the compute result for a goal: the monthly contribution needed, whether planned contributions keep it on track, and any month where a planned contribution would take its source account below its cash buffer (FR-35).
 - **Sinking fund**: a goal that repeats over a set interval, carrying its remainder into the next cycle (FR-35).
-- **Contribution**: a transfer into a goal's funding account that fulfils a planned contribution, or that the owner marks as funding the goal.
-- **Recurring event**: a scheduled income or expense with a direction, an amount, an account, a start date, an optional end date, a frequency, and a business-day shift (FR-41).
-- **Planned event**: a one-off scheduled income or expense with an amount, an account, and a date.
+- **Contribution**: a transfer into a goal's funding account that fulfils a planned contribution, or that the owner or Claude marks as funding the goal.
+- **Planned contribution**: a recurring event that moves money from a source account into a goal's funding account. Only a transfer from the source account into the funding account within the A-11 tolerances fulfils it (FR-35, FR-41).
+- **Goal withdrawal**: a transfer out of a goal's funding account that the owner or Claude marks as a goal withdrawal. It lowers the goal's progress (FR-35).
+- **Recurring event**: a scheduled income, expense, or planned contribution, with a direction for an income or expense (a planned contribution, being a transfer, has none), an amount, an account (two for a planned contribution), a start date, an optional end date, a frequency, and a business-day shift (FR-41).
+- **Planned event**: a one-off scheduled income or expense with an amount, an account, and a date; a one-off transfer, such as an extra payment or a goal contribution, names both its accounts.
 - **Occurrence**: one dated instance of a recurring event, or a planned event. It stays open until a posted transaction fulfils it, and is missed if its date passes unfulfilled (FR-41).
 - **Income event**: a recurring event that is income.
 - **Recurring expense event**: a recurring event that is an expense.
@@ -185,7 +190,7 @@ Downstream workflows and readers use these terms exactly. No other section intro
 - **Monthly extra**: the amount above the minimum payments that the owner commits to debt each month, paid from a named paying account.
 - **Payment scenario**: a comparison of the minimum payment with paying more, as a monthly extra or a one-off amount.
 - **Forecast**: the projected daily balance per account and in total for the next 90 days (FR-44). Card spending reaches cash only through the card's projected payments.
-- **Confidence level**: how firm a forecast figure is: high for known fixed amounts (recurring events with fixed amounts, planned events, installments, statement minimum payments, the monthly extra), medium for variable spending (the higher of a category's budget and its 3-month average) and estimated minimum payments (R-6), low for irregular spending (12-month averages), and unestimated for a category the ledger is too new to project, a state apart from low (FR-44). A day's confidence is the lowest level of any input feeding that account's balance from today through that day.
+- **Confidence level**: how firm a forecast figure is: high for known fixed amounts (recurring events with fixed amounts, planned events, installments, statement minimum payments, the monthly extra), medium for variable spending (the higher of a category's budget and its 3-month average) and estimated minimum payments (R-6), low for irregular spending (12-month averages), and, while the ledger covers fewer than 6 months, unestimated for a category with neither spending in the months the ledger covers nor a budget, a state apart from low that the ranking leaves out (FR-44). A day's confidence is the lowest level of any input feeding that account's balance from today through that day, and every lowest balance names what the forecast leaves out beside its confidence.
 - **Net worth**: assets minus debts in COP, with USD at the latest TRM and crypto at the latest price.
 - **Balance snapshot**: an account's balance and COP value for one day, reflecting every write dated on or before it at that day's TRM and price (FR-46).
 
@@ -195,7 +200,7 @@ Downstream workflows and readers use these terms exactly. No other section intro
 - **Alert**: a time-sensitive notice sent by email and kept in the alert list.
 - **Alert list**: the app's record of every alert, plus a daily count of Claude's writes by type (FR-48).
 - **Weekly digest**: an optional weekly email that points the owner to the app.
-- **Job runner**: the service that runs the scheduled jobs: rates, prices, balance snapshots, backups, restore checks, alert sends, and the AI connection self-check (NFR-11).
+- **Job runner**: the service that runs the scheduled jobs, listed with their cadences in `addendum.md` §3.2 (NFR-11).
 - **Release 1**: the working ledger, the first part of the MVP to ship (§9.3).
 - **Launch**: Release 1's first deploy. It starts the success clock (§11).
 - **Go/no-go point**: the check that opens Release 2: one statement cycle reconciled on every account that receives statements (§10).
@@ -206,19 +211,19 @@ Downstream workflows and readers use these terms exactly. No other section intro
 - **Anchor**: cuatro-portfolio, the repository that publishes the Cuatro design contract.
 - **Satellite**: an independent repository that consumes the Cuatro design contract. Cuatro Finance is one.
 - **Token role**: a named contract value (`--token-*`) that the UI uses instead of a raw colour.
-- **Fix-first scope**: the baseline and defect work in §5.1 that precedes any new feature (decision 8).
+- **Fix-first scope**: the work that precedes any new feature (decision 8): all of §5.1, the defect fixes inside FR-18, FR-20, FR-26, FR-45, and FR-23 (if it applies), and deferred item 1's shared sign-in redirect task (§10).
 - **Brownfield tag**: one of built, built but broken, new, or baseline, as defined in §0.
 
 ## 4. Colombian Money Rules
 
 Product rules the features rely on. FRs cite them as R-n.
 
-- **R-1** COP is the primary currency. Amounts render in es-CO conventions; COP shows no decimals. A USD amount always carries the code USD, never a bare "$". Dates render day, month, year. Text input parses under R-13.
-- **R-2** Each calendar date has exactly one TRM in force: the published rate whose validity covers that date. The latest TRM is the one in force on today's Bogotá date, and a balance snapshot uses the TRM in force on its own date. A USD transaction keeps the TRM of its date as its locked rate; current balances convert at the latest TRM. Correcting a USD transaction's date or amount re-locks it at the TRM of the corrected date, and the official TRM replacing a manual one re-locks every transaction that used the manual one (FR-20). Each re-lock is an audited write; nothing else changes a locked rate.
+- **R-1** COP is the primary currency. Amounts render in es-CO conventions; COP shows no decimals. A COP amount carries the code COP and a USD amount the code USD, never a bare "$"; a crypto quantity carries its asset's code, and a UVR balance the label UVR. Dates render day, month, year. Text input parses under R-13.
+- **R-2** Each calendar date has exactly one TRM in force: the published rate whose validity covers that date. The latest TRM is the one in force on today's Bogotá date, and a balance snapshot uses the TRM in force on its own date. A USD transaction keeps the TRM of its date as its locked rate; current balances convert at the latest TRM. Correcting a USD transaction's date or amount re-locks it at the TRM of the corrected date, and the official TRM replacing a manual one re-locks every transaction that used the manual one (FR-20). Each re-lock is an audited write that cannot be undone on its own: undoing the correction behind it restores what the correction changed and re-locks the transaction at the TRM now in force for its restored date; an official TRM re-lock is final. Nothing else changes a locked rate.
 - **R-3** Every interest rate is an EA rate. The monthly rate is (1 + EA) raised to the power 1/12, minus 1.
 - **R-4** A credit card has a statement cut day and a payment due day each month. Every purchase is a cuota purchase of 1 or more cuotas; one in more than 1 cuota carries an installment schedule at its own EA rate, the card's by default. A card's USD charges live on a linked USD card account that shares the card's statement cut day and payment due day (A-3); paying it from a COP account is a conversion transfer (FR-26).
-- **R-5** How a card charges interest (for example, on a 1-cuota purchase paid in full by the payment due date), its amortization method, its day-count rule for a partial first period, and how a payment above the minimum spreads across its balances come from the card's statement terms, entered per card, never from a hard-coded rule (A-4).
-- **R-6** A card's minimum payment is the figure its statement states, entered with the statement (FR-29), at high confidence. Between statements, the app shows an estimate, labeled as an estimate at medium confidence: the 1-cuota purchases dated up to the next statement cut day in full, plus the next cuota of each deferred purchase, plus the card's known recurring charges and any unpaid amount.
+- **R-5** How a card charges interest (for example, on a 1-cuota purchase paid in full by the payment due date), its amortization method, its day-count rule for a partial first period, how a payment above the minimum spreads across its balances, and whether a change in its rate reprices pending cuotas come from the card's statement terms, entered per card, never from a hard-coded rule (A-4). When a rate change does not reprice, each purchase keeps the rate it was made at; when it does, only purchases made at the card's rate move to the new one.
+- **R-6** A card's minimum payment is the figure its statement states, entered with the statement and in force once the statement entry takes effect (FR-29, FR-65), at high confidence. Between statements, the app shows an estimate, labeled as an estimate at medium confidence: the 1-cuota purchases dated up to the next statement cut day in full, plus the next cuota of each deferred purchase, plus the card's known recurring charges and any unpaid amount.
 - **R-7** Loans and the mortgage carry a fixed EA rate the owner enters (A-2). Loans indexed to DTF or IBR plus a spread are out of the MVP; DTF stops being the credit reference rate on 2027-01-01 (F7.1-08).
 - **R-8** A UVR mortgage (only under FR-23) holds its balance in UVR units with 6 decimal places. Its COP value is the units times the day's UVR.
 - **R-9** Dates are Bogotá calendar dates (America/Bogota). Colombian public holidays include the Monday moves. Holiday data is updatable, and the owner can add or remove a holiday, because the 2026 holiday law is under legal challenge (F7.2-12).
@@ -246,9 +251,9 @@ Product rules the features rely on. FRs cite them as R-n.
 
 ## 5. Features
 
-### 5.1 Trustworthy baseline (fix-first scope)
+### 5.1 Trustworthy baseline (core of the fix-first scope)
 
-**Description:** Before any new feature, the shipped core meets the security baseline, its defects are fixed, and it is ready for a first deploy (decision 8). This feature holds the security requirements (baseline), the defects in what exists (built but broken), and what a first deploy needs (new). Every defect fix ships with a regression test (NFR-10). Where a defect sits in a screen the redesign rebuilds (§5.12), the requirement is the behavior; whether the old screen is patched or replaced is an epics decision, leaning toward replacement. Realizes UJ-1, UJ-2, UJ-6.
+**Description:** Before any new feature, the shipped core meets the security baseline, its defects are fixed, and it is ready for a first deploy (decision 8). This feature holds the security requirements (baseline), the defects in what exists (built but broken), and what a first deploy needs (new). The fix-first scope (§3) also takes in deferred item 1's shared sign-in redirect task (`addendum.md` §5) and the defect fixes inside the built but broken FRs of other features (FR-18, FR-20, FR-26, FR-45, and FR-23 if it applies), meaning each consequence that corrects behavior the app has today, which the epics step marks against assessment §5 and §6 (a security item there belongs only to its baseline FR). Every defect fix ships with a regression test (NFR-10). Where a defect sits in a screen the redesign rebuilds (§5.12), the requirement is the behavior; whether the old screen is patched or replaced is an epics decision, leaning toward replacement, and a replacement counts as fix-first work (§10). Realizes UJ-1, UJ-2, UJ-6.
 
 **Functional Requirements:**
 
@@ -388,10 +393,9 @@ The database is the only irreplaceable data (assessment §8), so protecting it i
 The app ships as one deployment on the target host (decision 7). (assessment §3)
 
 **Consequences (testable):**
-- The app builds into a container image and runs with the database and the job runner as one composed deployment.
-- A clean checkout installs from the frozen lockfile and builds (deferred item 2).
+- The app, the database, and the job runner deploy as one unit, built from a clean checkout that installs from the frozen lockfile (deferred item 2); `addendum.md` §3.1 holds the packaging.
 - A deployment refuses to start when its public address is not configured, and no part of sign-in falls back to a local address.
-- The composed deployment serves the app through a reverse proxy over HTTPS.
+- The deployment serves the app only over HTTPS, and none of its other services is reachable from outside the host (FR-6, baseline).
 - The owner's account has TOTP set up before the deployment is reachable from outside the host.
 - The first deploy happens only after every FR in §5.1 passes.
 
@@ -409,7 +413,7 @@ The owner can recover TOTP access without losing the ledger. (reconcile of the o
 
 **Consequences (testable):**
 - Signed in with TOTP, the owner can regenerate backup codes, which invalidates the old ones, and can move TOTP to a new authenticator after entering a code from the current one; after a move, the old authenticator's codes fail.
-- The README documents how someone with access to the server restores the owner's access when the authenticator and every backup code are lost, and that procedure runs once on a test deployment.
+- The README documents how someone with access to the server restores the owner's access when the authenticator and every backup code are lost. That procedure runs on a test deployment and must pass before the auth library upgrade (U2 in `addendum.md`) and before any later migration that touches auth tables, which wait until it does; it also runs at least yearly, each run recorded with its date and result.
 
 #### FR-64: Attempt limits [baseline]
 
@@ -433,7 +437,7 @@ The owner, or Claude with write scope, can create and edit accounts of the MVP t
 **Consequences (testable):**
 - Each account has a name, a type, a currency (for a crypto account, its one crypto asset), an institution label the owner types, an opening balance and date, whether it receives statements, and a masked account number (NFR-7); a crypto account needs no number.
 - A full account number typed into the number field keeps only its last four digits.
-- The opening balance is the balance at the end of its opening date. The opening balance, the opening date, and a liability's starting debt are set once at creation; any later change is an adjustment with a reason, shown in the feed and in reconciliation.
+- The opening balance is the balance at the end of its opening date. The opening balance, the opening date, and a liability's starting debt are set once at creation; any later change is an adjustment with a reason, shown in the feed and in reconciliation. When Claude enters the opening balance or a starting debt, or an adjustment, that input waits for the owner's confirmation (FR-65).
 - The owner may set an opening date earlier than today and import the statements since then, so that history feeds averages, budget history, and the trigger of subscription detection (FR-42).
 - Asset accounts show their balance; liability accounts show their debt.
 - Card, loan, and mortgage terms, the paying account included, live on the account itself (FR-36, FR-37).
@@ -465,7 +469,10 @@ The owner can hold a crypto asset in a crypto account, one asset per account, as
 **Consequences (testable):**
 - A crypto quantity keeps its asset's precision: an asset held to 8 decimal places is stored and shown exactly, never rounded to zero.
 - Each crypto account is valued at its asset's latest USD price, converted to COP at the latest TRM, with the price date shown.
-- A buy or a sell records the quantity and its COP cost. Each crypto account shows its cost basis as the average cost per unit in COP, and its unrealized gain or loss.
+- A buy records the quantity and its COP cost, and a sell the quantity and its COP proceeds. Each crypto account shows its cost basis as the average cost per unit in COP, and its unrealized gain or loss.
+- A sell records its realized gain or loss against the average cost in COP, on the crypto account, never as spending or income.
+- A fee paid in the asset lowers the quantity and leaves the total COP cost unchanged, so the average cost per unit rises.
+- The architecture step sets the largest quantity, the USD price scale, and a working precision that holds both exactly (`addendum.md` §3.6).
 - The owner can enter a dated manual price for an asset; it is labeled manual and used only while no newer fetched price exists (S8-05, F7.1-05).
 
 #### FR-22: Interest rates as EA [new]
@@ -483,7 +490,7 @@ This FR applies only if the owner confirms the mortgage is UVR denominated (Open
 **Consequences (testable):**
 - The mortgage shows its balance in UVR units and its COP value at the day's UVR (R-8).
 - UVR settings are validated together (issue 33): the UVR setting is accepted only on a mortgage; a UVR mortgage needs a balance in UVR units above zero with at most 6 decimal places; an account without the setting holds no UVR balance; each violation is rejected with its reason.
-- When the day's UVR is unavailable, the last known value is used and labeled with its date; the owner can enter a missing UVR by hand, recorded in the audit log.
+- When the day's UVR is unavailable, the last known value is used and labeled with its date; the owner can enter a missing UVR by hand, recorded in the audit log. When the official UVR for that date arrives, it replaces the manual one as an audited write.
 
 ### 5.3 Transactions and transfers
 
@@ -496,11 +503,11 @@ This FR applies only if the owner confirms the mortgage is UVR denominated (Open
 The owner can see every transaction across accounts in one feed. (assessment §5)
 
 **Consequences (testable):**
-- Filters combine: account, category, date range, amount range, source, and text in the description or notes.
+- Filters combine: account, category, date range, amount range, source, status (voided or not), and text in the description or notes.
 - The amount range uses the account's currency when one account is selected, and COP values at locked rates across accounts.
 - The text filter matches a substring, ignoring case and accents.
 - Each row shows the date, description, account, category, signed amount with currency, and source.
-- Voided transactions stay hidden unless a filter shows them.
+- Voided transactions stay hidden unless the status filter shows them.
 
 #### FR-25: Edit, void, and notes [new]
 
@@ -509,6 +516,7 @@ The owner, or Claude with write scope, can edit a transaction's description, cat
 **Consequences (testable):**
 - Every edit and void is recorded in the audit log with before and after values and can be undone (FR-55); the audit log records writes from every source (A-10).
 - Changing the date of either side of a transfer changes both sides. In one currency, changing one side's amount changes the other's; across currencies, the other side stays and the implied rate is recomputed. Voiding either side voids both.
+- Voiding a transaction that a row cleared by a match, with the void tool or by undoing its creation (FR-55), warns that the row will post as new. In the app the owner confirms that or keeps the row skipped; a void through Claude leaves that choice in the review queue (FR-32). Voiding a transaction that its own row posted, an undone import included, keeps the row skipped with no prompt.
 
 #### FR-26: Transfers between own accounts [built but broken]
 
@@ -516,7 +524,7 @@ The owner, or Claude with write scope, can edit a transaction's description, cat
 
 **Consequences (testable):**
 - A transfer is a linked pair: a debit on one of the owner's accounts and a credit on another. It never counts as spending or income.
-- A card or loan payment from a savings account is a transfer. A loan or mortgage payment follows its installment schedule: the interest and any other charges in it post as spending on the liability account, under their own category, so the debt falls only by the principal part. Card interest and fees arrive as statement rows.
+- A card or loan payment from a savings account is a transfer. A loan or mortgage payment follows its installment schedule: the interest and any other charges in it post as spending on the liability account, under their own category, so once its split is entered (FR-37) the debt falls only by the principal part. Card interest and fees arrive as statement rows.
 - A COP to USD conversion, paying a linked USD card account from a COP account included, is a transfer whose two sides keep their own currencies. The rate it implies is stored with it, and its spread against the TRM of its date shows as an informational line on the transfer, never as spending or income.
 - A movement is a transfer only when both sides are the owner's accounts (R-10); otherwise it is spending or income.
 - A row links as a transfer side to an unlinked transaction on another of the owner's accounts that is opposite in direction, inside the match window (A-5), and of the same amount in one currency or, across currencies, at an implied rate within 5 percent of the TRM (A-11).
@@ -550,12 +558,13 @@ The owner can import a statement file for one account. (assessment §5, S8-22)
 
 **Consequences (testable):**
 - Each staged row gets one class, tested in this order: duplicate, match, near duplicate, new (§3).
-- Match candidates are every transaction on the account that no statement row has confirmed, whatever its source, generated transfer sides included. Matching is one to one, nearest date first; a row with two or more candidates goes to the review queue; voided records never take part.
+- The duplicate and near-duplicate tests compare a staged row with the account's consumed rows (§3): every row already posted, matched, linked as a later cuota or a transfer side, or kept skipped by the owner, each kept with its date, amount, and description key, unchanged by later edits. Re-importing an overlapping file therefore skips every row the ledger has used, and a consumed row stays consumed whatever later happens to its transaction. Voided transactions take no part in matching.
+- Match candidates are every transaction on the account that no statement row has confirmed, whatever its source, generated transfer sides included. Matching is one to one, nearest date first; a row with two or more candidates, and two or more rows contending for one transaction, go to the review queue; voided records never take part.
 - The match window is 3 business days either side of the row's date, inclusive (A-5).
 - A staged row within 15 percent of the amount of a Claude capture inside the match window (A-11) is offered as a match for review, never posted silently.
 - At import, each Claude capture in the statement period with no row joins the review queue as an unmatched Claude capture.
-- Confirming a match keeps one transaction, now cleared: it keeps its own date for budgets and its locked rate, and the statement's date and description are kept beside it.
-- A duplicate is skipped and listed, and the owner can still post a listed duplicate (two genuine identical charges). Matching counts rows: two identical staged rows against one existing transaction leave one row to post.
+- Confirming a match keeps one transaction, now cleared: it takes the row's amount when the two differ (a near-amount match), keeps its own date for budgets and its locked rate, and keeps the row's description beside its own.
+- A duplicate is skipped and listed, and the owner can still post a listed duplicate (two genuine identical charges). The duplicate test counts rows: two identical staged rows against one consumed row leave one row to post.
 - A near duplicate is flagged for review, never silently skipped or posted.
 - A staged card row with a cuota counter above 1 links to its cuota purchase and never posts as a purchase (FR-36).
 - Staged rows dated on or before the account's opening date are listed and skipped like duplicates; the owner can still post one.
@@ -568,10 +577,11 @@ The owner, or Claude with write scope, can reconcile an account against a statem
 **Consequences (testable):**
 - For a statement, the owner or Claude enters its closing balance and closing date and, for a card, its minimum payment and printed payment due date, which override the computed ones for that cycle (R-6).
 - A statement period runs from the day after the previous statement's closing date; the first runs from the day after the opening date.
-- The app compares the closing balance with the account's cleared balance at the closing date, at the statement's precision, and lists the period's uncleared transactions as pending, not as a difference.
+- The app compares the closing balance with the account's cleared balance at the closing date, at the statement's precision. The cleared balance is the opening balance or starting debt, plus each adjustment in force dated by then, plus each cleared transaction placed by the date of the row that cleared it; budgets and a transaction's locked rate keep its own date. The app lists the period's uncleared transactions as pending, not as a difference.
 - A difference of zero marks the account reconciled for that statement; any other difference stays open, with the pending list and any unmatched Claude captures beside it.
-- The reconciliation records who entered the closing balance and who confirmed it. A closing balance Claude enters takes effect only once the owner confirms it (FR-65).
-- A write that changes a cleared transaction in a reconciled period warns first and removes the reconciled mark until that statement reconciles again.
+- The reconciliation records who entered the closing balance and who confirmed it. A closing balance and date, minimum payment, or printed payment due date that Claude enters takes effect only once the owner confirms the statement entry, with one confirmation for all of them (FR-65).
+- From the moment a statement is entered, through the owner's confirmation, and for as long as its difference is not zero, the reconciliation records each write that creates, changes, or voids a transaction in its statement period, placing a cleared transaction by its row's date and any other by its own. Once the difference reaches zero, the reconciliation shows those writes beside the result, in the confirmation item too, so how a difference closed stays visible.
+- A write that changes or voids a cleared transaction placed in a reconciled period by its row's date warns first and removes the reconciled mark until that statement reconciles again.
 - For an account that receives statements, when no reconciliation follows a card's statement cut day, or another account's last closing date plus one month, within the allowance the owner sets (A-12), a statement expected item joins the review queue.
 - (Release 2) The statement expected item also raises an alert (FR-48).
 
@@ -612,14 +622,18 @@ The owner can add, rename, merge, and archive categories; Claude with write scop
 - One review queue, in the app and through a read tool, holds these item types, each with its resolutions:
   - uncategorized transaction: set a category, optionally saving a rule (FR-31);
   - near duplicate: keep both, or keep one (FR-28);
-  - match to confirm (two or more candidates, or a near amount): confirm one, or reject so the row posts as new (FR-28);
+  - match to confirm (two or more candidates, two or more rows contending for one transaction, or an amount within 15 percent, A-11): confirm one, and any other row contending for that transaction posts as new, or reject so the rows post as new (FR-28);
   - unmatched Claude capture: keep it, or void it (FR-28);
   - unmatched transfer candidate: link it to an account, or mark it not a transfer (FR-26);
-  - Claude-entered account term or closing balance: confirm it, or reject it so it never takes effect (FR-65);
+  - Claude-entered input awaiting confirmation (an account term, a statement entry, an opening balance, a starting debt, or an adjustment): confirm it, or reject it so it never takes effect (FR-65);
   - statement expected: clears when the statement reconciles, or the owner dismisses it (FR-29);
-  - re-locked rate: acknowledge it, or undo the re-lock (FR-20);
-  - (Release 2) an occurrence with two or more fulfilling transactions: pick one, or none; and a missed occurrence: link the transaction that fulfilled it, or confirm it missed (FR-41).
-- Claude with write scope can resolve review queue items, except a Claude-entered account term or closing balance, which only the owner confirms, in the app (FR-65). Every resolution is logged and can be undone (FR-55).
+  - re-locked rate: acknowledge it (FR-20, R-2);
+  - loan or mortgage payment awaiting its split: enter its interest and charges from the lender's statement, or mark it all principal (FR-37);
+  - statement row whose matched transaction Claude voided: post it as new, or keep it skipped (FR-25);
+  - (Release 2) an occurrence with two or more fulfilling transactions: pick one, or none; and a missed occurrence: link the transaction that fulfilled it, or confirm it missed (FR-41);
+  - (Release 2, once FR-42 starts) a price change on a confirmed subscription: accept the new amount, keep the old one, or mark it a separate charge (FR-42).
+- Claude with write scope can resolve review queue items, except a Claude-entered input awaiting confirmation, which only the owner confirms, in the app (FR-65). Every resolution is logged and can be undone (FR-55).
+- An item closes, logged, when an undo or a void removes what it is about: for a statement row whose matched transaction Claude voided, that void; for a payment awaiting its split, that payment; for a waiting input, the input itself.
 - The dashboard shows the number of review queue items.
 
 ### 5.6 Budgets and goals
@@ -650,15 +664,17 @@ The owner, or Claude with write scope, can set a monthly limit per category with
 
 #### FR-35: Goals and sinking funds [new]
 
-The owner, or Claude with write scope, can create a goal with a name, target amount, target date, and funding account. (S8-37)
+The owner, or Claude with write scope, can create a goal with a name, target amount and its currency (the funding account's by default), target date, and funding account, which is a COP or USD savings account. (S8-37)
 
 **Consequences (testable):**
-- The goal plan shows progress, the monthly contribution needed (the target minus progress, divided by the whole months left, rounded up), and whether the planned contributions by the target date cover the rest (on track).
-- Progress counts contributions into the funding account, not that account's whole balance (A-7). A transfer that fulfils a planned contribution is that goal's contribution, logged and undoable (FR-41).
-- Planned contributions are recurring events, so the forecast includes them.
-- The goal plan flags any month where a planned contribution would take the account it comes from below its cash buffer.
+- The goal plan shows progress, the monthly contribution needed (the target minus progress, divided by the whole months left, or all of it when less than one whole month is left, rounded up to the peso or the cent, NFR-1), and whether the planned contributions by the target date cover the rest (on track).
+- Progress counts contributions into the funding account, not that account's whole balance (A-7). A transfer that fulfils a planned contribution is that goal's contribution, logged and undoable (FR-41). A goal withdrawal lowers progress, logged and undoable.
+- When the target's currency differs from the funding account's, contributions and goal withdrawals convert at the latest TRM, with its rate date shown (NFR-8), the basis the goal plan also uses for planned contributions.
+- Planned contributions are recurring events, so the forecast includes them. Each names its source account and the goal's funding account: the forecast lowers the one and raises the other, and only a transfer from the source account into the funding account within the A-11 tolerances fulfils it (FR-41).
+- The goal plan flags any month where a planned contribution would take its source account below its cash buffer, and names what the forecast leaves out beside its confidence (FR-44).
+- A goal whose progress reaches its target shows as reached; with a target in another currency, only while progress at the latest TRM covers it.
 - A sinking fund holds an interval: when its target date passes, it starts its next cycle and carries its remainder into it.
-- A goal whose target date passes short of its target shows as missed, with the amount still missing.
+- A goal whose target date passes short of its target, judged at that date's TRM for a target in another currency, shows as missed, with the amount still missing on that date.
 
 ### 5.7 Debt, cards, and payment planning
 
@@ -672,7 +688,7 @@ The owner, or Claude with write scope, can create a goal with a name, target amo
 
 **Consequences (testable):**
 - A card has a statement cut day, a payment due day, an EA rate, a paying account, its interest terms (R-5, A-4), and an optional linked USD card account (R-4, A-3).
-- Each purchase records its number of cuotas and, when it differs from the card's, its own EA rate. A running purchase entered at setup records its original amount, cuota count, and cuotas already billed, and leaves the opening balance unchanged.
+- Each purchase records its number of cuotas and the EA rate it was made at: its own, or else the card's on its purchase date. Every change to a card's rate is dated, from Release 1. A running purchase entered at setup records its original amount, cuota count, and cuotas already billed, and leaves the opening balance unchanged.
 - A first-cuota row posts the purchase's original value once, with its cuota count; a match also takes the statement's cuota count. A staged row with a cuota counter above 1 links to its purchase and records that cuota as billed, with its interest posted as interest spending.
 - A credit can be marked as a reversal of a purchase: it ends the purchase's remaining cuotas and lowers its category's spending in the purchase's month, never counting as income.
 - The card shows its debt, the cuotas pending per purchase, and the minimum payment and payment due date of its latest statement (FR-29).
@@ -681,6 +697,7 @@ The owner, or Claude with write scope, can create a goal with a name, target amo
 - (Release 2) A purchase in more than 1 cuota gets an installment schedule by the card's amortization method (equal principal by default, level installment the alternative) at its own EA rate, with a partial first period under the card's day-count rule (A-11).
 - (Release 2) Between statements, the card shows the estimated minimum payment of R-6.
 - (Release 2) The card's terms say how a payment above the minimum spreads across its balances, and whether it shortens or lowers cuotas.
+- (Release 2) A purchase's schedule recomputes from its remaining principal after a payment above the minimum, after a change in its cuota count, and after a card rate change that reprices pending cuotas (R-5).
 - (Release 2) A liability with a credit balance has no minimum payment and leaves the payoff order (FR-38, FR-39).
 
 #### FR-37: Loans and the mortgage [new]
@@ -690,9 +707,11 @@ The owner, or Claude with write scope, can create a goal with a name, target amo
 **Consequences (testable):**
 - A loan or mortgage has a starting debt, set once at creation (FR-18), an EA rate (A-2), an installment, a monthly payment due day, a remaining term, an extra payment rule, a paying account, and the fixed charges inside its installment, such as insurance. Its current debt is derived from the starting debt and its transactions, never stored or written.
 - Each installment payment splits into principal, which lowers the debt, and interest and charges, which post as spending (FR-26). The split comes from the lender's statement, entered as an audited write.
+- Until Release 2's computed schedule supplies a split, a loan or mortgage payment posts as a full transfer that lowers the debt by its whole amount and waits in the review queue as awaiting its split (FR-32). Entering its interest and charges posts them as spending on the liability; the owner or Claude can instead mark it all principal, as for an extra payment.
 - A payment due day beyond a month's length falls on that month's last day (FR-41), and a derived payment due date takes the shift in the loan's terms, the previous business day by default.
 - (Release 2) The app shows the installment schedule, by the loan's amortization method (equal principal by default, level installment the alternative) with a partial first period under its day-count rule (A-11), and the payoff date. The computed schedule is a labeled estimate, and a lender's split replaces it for its installment.
 - (Release 2) The computed schedule supplies the split until a lender's split replaces it.
+- (Release 2) When the installment or remaining term the owner entered differs from what the debt and EA rate compute, the app shows both and the owner picks which the schedule uses.
 - (Release 2) A payment covers the charges and interest due first, then principal, then any excess under the extra payment rule. A short or missed payment leaves the rest due and is flagged, and the schedule recomputes from the remaining principal after each payment.
 
 #### FR-38: Payoff comparison [new]
@@ -712,11 +731,12 @@ The owner, or Claude with write scope, can create a goal with a name, target amo
 
 **Consequences (testable):**
 - The payment plan lists every payment due this month with its payment due date: minimum payments first, then the monthly extra by the payoff method. Where a statement gives one combined minimum for a card and its linked USD card account, the plan links the two accounts in one line.
-- Every minimum payment is always scheduled by its payment due date. The cash buffer limits only the monthly extra: the plan schedules the largest part of the extra that keeps its paying account at or above its cash buffer on each of the next 90 days, and lists the rest as held back. When a minimum payment would take the paying account below its cash buffer, the plan keeps the payment and flags the breach.
+- Every minimum payment is always scheduled by its payment due date. When a minimum payment would take the paying account below its cash buffer, the plan keeps the payment and flags the breach.
+- The cash buffer limits only the monthly extra: the plan fits this month's extra against a forecast that holds every minimum payment and the full monthly extra in each later month of the horizon, schedules the largest part that keeps its paying account at or above its cash buffer on each of the next 90 days, and lists the rest as held back, naming the first day it would breach the buffer. When no part fits, because a minimum payment or a later month's extra breaches the buffer without this month's extra, the plan holds back all of it and names that first breach day and its cause.
 - A projected balance below zero on a payment date is flagged as a shortfall, apart from a buffer breach, in payment due date order.
-- A payment whose payment due date falls before the next income event into its paying account is flagged.
+- A payment whose payment due date falls before the next income event into its paying account is flagged. With no income event into that account inside the horizon, every payment from it is flagged, and its reason says so.
 - A payment that fulfils its line shows as paid (FR-41), even when it came from another account.
-- Each line states in words the rule that placed it (minimum payment, monthly extra by the payoff method, due before the next income event, extra held back by the cash buffer), and the compute response returns the same reason.
+- Each line states in words the rule that placed it (minimum payment, monthly extra by the payoff method, due before the next income event or with none in the horizon, extra held back by the cash buffer), and the compute response returns the same reason.
 - Payment due dates feed the payment due alerts (FR-48).
 
 #### FR-40: Payment scenarios [new]
@@ -724,7 +744,7 @@ The owner, or Claude with write scope, can create a goal with a name, target amo
 The owner or Claude can compare the minimum payment with paying more, as a monthly extra or a one-off amount, for one debt or for all debts. (assessment §5)
 
 **Consequences (testable):**
-- Each option shows its payoff date, how many months sooner than the minimum it pays off, total interest, interest saved against the minimum, and the paying account's lowest forecast balance with that day's confidence level, flagging the first day below its cash buffer. The compute response returns these ready to quote.
+- Each option shows its payoff date, how many months sooner than the minimum it pays off, total interest, interest saved against the minimum, and the paying account's lowest forecast balance with that day's confidence level and what the forecast leaves out (FR-44), flagging the first day below its cash buffer. The compute response returns these ready to quote.
 - For a loan or mortgage, an extra payment can be compared as a term reduction or as an installment reduction.
 - The owner, or Claude with write scope, can save a chosen option as the monthly extra, or a one-off option as a planned event (FR-41).
 
@@ -739,30 +759,30 @@ The owner or Claude can compare the minimum payment with paying more, as a month
 The owner, or Claude with write scope, can define recurring events and planned events. (S8-26)
 
 **Consequences (testable):**
-- Each recurring event has a direction, an amount, an account, a start date, an optional end date, a frequency, and a business-day shift. A frequency is one of three rules: every N days; every N months on a chosen day; or twice a month on two chosen days.
+- Each recurring event has a direction (income or expense; a planned contribution has none), an amount, an account (a planned contribution has two: its source account and the goal's funding account, FR-35), a start date, an optional end date, a frequency, and a business-day shift. A frequency is one of three rules: every N days; every N months on a chosen day; or twice a month on two chosen days.
 - Each occurrence is computed from the event's anchor (its start date), then clamped, then shifted: a chosen day beyond a month's length falls on that month's last day, which covers "the last day of the month", and the business-day shift applies after that. Two chosen days clamped to one date give two occurrences.
-- A recurring event can change or skip one occurrence. A planned event (amount, account, date) enters the payment plan and the forecast like an occurrence.
+- A recurring event can change or skip one occurrence. A planned event (amount; account, or both accounts for a one-off transfer; date) enters the payment plan and the forecast like an occurrence.
 - Payment due dates, subscriptions, and planned contributions appear as recurring events.
-- A posted transaction on the event's account fulfils its open occurrence when its amount is within 10 percent of the occurrence's amount and its date within 5 business days of the occurrence's date (A-11): one such transaction fulfils it automatically, and two or more go to the review queue. Payments into a liability since its previous payment due date fulfil its payment due occurrence once they reach the minimum payment; less is a short payment (FR-37).
+- A posted transaction on the event's account fulfils its open occurrence when its amount is within 10 percent of the occurrence's amount and its date within 5 business days of the occurrence's date (A-11): one such transaction fulfils it automatically, unless FR-42 holds that transaction as a price change, and two or more go to the review queue. A planned contribution's occurrence is fulfilled only by a transfer from its source account into the goal's funding account, within the same tolerances. Payments into a liability since its previous payment due date fulfil its payment due occurrence once they reach the minimum payment; less is a short payment (FR-37).
 - A fulfilled occurrence stops projecting, shows as paid in the payment plan, and silences its payment due alerts. An occurrence whose date passes unfulfilled is flagged as missed, which is SM-3's data, and is never projected into the past.
-- The owner can add or remove a public holiday, and the change applies to every business-day shift (R-9), re-shifting only future occurrences.
+- The owner can add or remove a public holiday, and the change applies to every business-day shift (R-9), re-shifting only future occurrences. Until this FR ships, Release 1's shifts (FR-36, FR-37, FR-48) use the holiday data without overrides.
 
 #### FR-42: Subscription detection [new]
 
-Gated: detection starts when the ledger holds six months of card and account history (§9.2, §9.3). Until then a subscription is a recurring expense event that the owner or Claude adds (FR-41). Once detection starts, it proposes recurring expense events rather than a second kind of record. (assessment §5)
+Gated: detection starts when the ledger holds six months of card and account history (§9.2, §9.3). Until then a subscription is a recurring expense event that the owner or Claude adds (FR-41). Once detection starts, it proposes recurring expense events rather than a second kind of record. Price steps, skipped months, and currency drift wait for this FR's epic, revisited when detection starts; the epic's first check, recorded with fictional examples only (§7.1), is whether real descriptors carry changing reference numbers, which would split one merchant across description keys. (assessment §5)
 
 **Consequences (testable):**
-- Weekly, the app scans the last 6 months of card charges and account debits and proposes subscriptions: 2 or more charges from the same normalized merchant, intervals whose standard deviation is under 3 days, amounts within 5 percent of their average, and an average interval near 7, 14, or 28 to 31 days.
+- Weekly, the app scans the last 6 months of card charges and account debits and proposes subscriptions: 2 or more charges with the same description key (the normalized merchant), intervals whose standard deviation is under 3 days (a test that 2 charges, with one interval, skip), amounts within 5 percent of their average, and an average interval of 6 to 8, 13 to 15, or 28 to 31 days.
 - Each proposal shows the charges and intervals behind it.
 - Each subscription shows its merchant, amount, currency, frequency, next expected charge, and yearly cost in COP.
 - The owner, or Claude with write scope, confirms or dismisses each proposal; only the owner flags a subscription as unwanted, and the app never flags one unwanted on its own.
-- A charge on a confirmed subscription that differs from its expected amount by more than 5 percent is flagged.
+- A charge enters the review queue as a price change (FR-32), and fulfils nothing until resolved, when all of these hold: it carries a confirmed subscription's description key; it falls inside A-11's date window of that subscription's open occurrence; it differs from the subscription's amount by more than 5 percent; and no other confirmed subscription with that key is within 5 percent of it. Accepting the new amount, which then becomes the subscription's, or keeping the old one lets the charge fulfil that occurrence; marking it a separate charge does not.
 - The owner or Claude adds yearly subscriptions, which 6 months of history cannot reveal.
 
 #### FR-43: Cash buffer [new]
 
 **Consequences (testable):**
-- The owner sets a cash buffer per asset account, zero when unset, and the payment plan and the forecast use it.
+- Only the owner sets a cash buffer, per asset account, in the app; it is zero when unset, and the payment plan and the forecast use it. No write tool changes it (FR-54).
 
 #### FR-44: Cash flow forecast [new]
 
@@ -770,12 +790,15 @@ Gated: detection starts when the ledger holds six months of card and account his
 
 **Consequences (testable):**
 - For the next 90 days, the app projects each account's daily balance and the total in COP, with USD at the latest TRM.
-- Inputs and their confidence levels: high for recurring events with fixed amounts, planned events, planned contributions, installments, statement minimum payments, and the monthly extra (the payment plan is an input); medium for variable spending per category, at the higher of its budget and its 3-month average, and for estimated minimum payments (R-6); low for categories with irregular spending, meaning spending in fewer than 3 of the last 6 months, at their 12-month average spread across the year.
-- Averages divide by the months the ledger covers, and exclude transactions that fulfilled a recurring event, a subscription, or an installment. A category is irregular only once the ledger covers 6 months; before that it projects its budget, or shows as unestimated, a state apart from low that the app and the compute response name. The forecast lists what it leaves out.
-- Each category estimate lands on the accounts that paid it, by their split over the last 3 closed months; projected card spending reaches cash only through the card's projected payments.
+- Inputs and their confidence levels: high for recurring events with fixed amounts, planned events, planned contributions, installments, statement minimum payments, and the monthly extra (the payment plan is an input, FR-39); medium for variable spending per category, at the higher of its budget and its 3-month average, and for estimated minimum payments (R-6); low for categories with irregular spending, meaning spending in fewer than 3 of the last 6 months, at their 12-month average spread across the year.
+- Averages divide by the months the ledger covers, and exclude transactions that fulfilled a recurring event, a subscription, or an installment. A category with spending in the covered months is irregular only once the ledger covers 6 months, and takes the medium rule over the covered months until then. A category with no spending in the covered months never counts as irregular: it projects its budget, or, with no budget, shows as unestimated until the ledger covers 6 months, after which it projects zero and feeds no account.
+- Unestimated, a state apart from low that the app and the compute response name, takes no part in the day confidence rule. The forecast lists what it leaves out, and every lowest balance names that list beside its confidence (FR-35, FR-40, FR-45, FR-53).
+- Each category estimate lands on the accounts that paid it, by their split over the last 3 closed months, and a budget projected for a category with no spending lands by the split of all spending over those months; projected card spending reaches cash only through the card's projected payments.
+- The monthly extra leaves its paying account once a month: this month as the payment plan schedules it, and in each later month in full, as each debt's share by the payoff method on that debt's payment due date. A card's share counts inside its projected payment and nowhere else.
+- For every statement cut day after the latest entered statement, a passed one included, whose following payment due date falls inside the horizon, a card's projected payment on that due date is the R-6 estimate over its posted and projected spending up to that cut day, with projected category spending counted as 1-cuota purchases, plus the card's share of the monthly extra. A card with no entered statement starts from its opening date. The projected payment carries medium confidence at best, and the lowest level of what it sums.
 - The current month projects only what remains above its posted spending, never below zero, spread evenly over its remaining days; later months spread evenly over their days.
 - Fulfilled occurrences stop projecting, and no occurrence is projected into the past (FR-41).
-- A day's confidence is the lowest level of any input feeding that account's balance from today through that day. Each day shows its confidence level and lists the recurring events and estimates that move it, in the app and in the compute response.
+- A day's confidence is the lowest level of any input feeding that account's balance from today through that day, or high when no ranked input feeds it. Each day shows its confidence level and lists the recurring events and estimates that move it, in the app and in the compute response.
 - Lowest balances are reported per asset account against its own cash buffer, with the total apart. Every day an account is below its cash buffer is marked, and the first is named.
 
 ### 5.9 Dashboard, net worth, and reports
@@ -792,7 +815,7 @@ Gated: detection starts when the ledger holds six months of card and account his
 - The dashboard is the landing screen after sign-in; with no accounts, it shows only a pointer to create one.
 - Net worth converts every currency to COP before adding (USD at the latest TRM, crypto at the latest price), subtracts debts, and shows the conversion dates.
 - The dashboard shows a debt summary (total debt, next payment due dates, the minimum payments of the latest statements), the review queue count, and each account's current through date.
-- (Release 2) The dashboard also shows this month's budget status, listing each budgeted category with spent, limit, and percent, and the forecast's lowest balance in the next 90 days with that day's confidence level.
+- (Release 2) The dashboard also shows this month's budget status, listing each budgeted category with spent, limit, and percent, and the forecast's lowest balance in the next 90 days with that day's confidence level and what the forecast leaves out (FR-44).
 
 #### FR-46: Balance snapshots and net worth history [new]
 
@@ -824,11 +847,11 @@ Gated: detection starts when the ledger holds six months of card and account his
 (decision 5)
 
 **Consequences (testable):**
-- Alert types: payment due, 3 days ahead and on the day (A-9); new connected client (FR-51); failed backup or restore check (FR-15); repeated failed attempts (FR-64); budget threshold or limit (FR-33); and statement expected (FR-29).
-- Release 1 ships the email channel and the alert list together with FR-15, and four alert types, always on with no per-type setting: payment due, new connected client, failed backup or restore check, and repeated failed attempts (FR-64).
-- In Release 1, before the recurring calendar exists, a payment due alert is skipped once a payment to that liability account has posted since its last statement cut day.
-- (Release 2) The budget and statement expected types arrive with a per-type on or off setting, which never turns off the new connected client alert or FR-64's alert.
-- An alert email holds the alert type, the client's name for a new connected client, a count for the types that carry one (how many categories crossed, for a budget alert; how many accounts, for statement expected), and a link to the app, and nothing NFR-7 excludes.
+- Alert types: payment due, 3 days ahead and on the day (A-9); new connected client (FR-51); failed backup or restore check (FR-15); repeated failed attempts (FR-64); write limit reached (FR-54); budget threshold or limit (FR-33); and statement expected (FR-29).
+- Release 1 ships the email channel and the alert list together with FR-15, and five alert types, always on with no per-type setting: payment due, new connected client, failed backup or restore check, repeated failed attempts (FR-64), and write limit reached (FR-54).
+- In Release 1, before the recurring calendar exists, a payment due alert is skipped once a payment to that liability account (a transfer into it, never a refund or a reversal) has posted since the last statement cut day for a card, the previous payment due date for a loan or the mortgage, and, before the first such date, the account's opening date.
+- (Release 2) The budget and statement expected types arrive with a per-type on or off setting that covers only those two types; the five Release 1 types stay always on.
+- An alert email holds the alert type, the client's name for a new connected client or a write limit alert, a count for the types that carry one (how many categories crossed, for a budget alert; how many accounts, for statement expected), and a link to the app, and nothing NFR-7 excludes.
 - A new connected client alert is sent within 5 minutes, and a scheduled alert within 1 hour of its job (A-13); a failed send shows in the app (NFR-11).
 - Every alert also lands in the alert list, which the owner sees in the app and Claude reads through a read tool. On each day Claude writes anything, the alert list also records that day's count of Claude writes by type, never sent by email.
 
@@ -841,7 +864,7 @@ Gated: detection starts when the ledger holds six months of card and account his
 
 ### 5.11 The AI connection
 
-**Description:** The main feature. Claude acts as the owner's accountant through the AI connection: it reads the ledger, asks the app for exact figures, and manages records, while the app stays the single source of truth. The assessment recommended a read-only connection (S8-20, S8-35); the owner wants Claude to manage data, so write access ships with guardrails instead: bounded write tools, voids instead of deletions, an audit log, and undo. [NOTE FOR PM: if SM-C1 trips, revisit the write tools before adding new ones.] Realizes UJ-2, UJ-3, UJ-4, UJ-6, UJ-7, UJ-8.
+**Description:** The main feature. Claude acts as the owner's accountant through the AI connection: it reads the ledger, asks the app for exact figures, and manages records, while the app stays the single source of truth. The assessment recommended a read-only connection (S8-20, S8-35); the owner wants Claude to manage data, so write access ships with guardrails instead: bounded write tools with a per-client write limit, voids instead of deletions, an audit log, and undo. [NOTE FOR PM: if SM-C1 trips, revisit the write tools before adding new ones.] Realizes UJ-2, UJ-3, UJ-4, UJ-6, UJ-7, UJ-8.
 
 **Risk:** the AI connection rests on Claude's custom connector support (A-15). When it breaks, each Claude-only path has an in-app alternative: manual entry (FR-11) for capture, the in-app import (FR-27) and in-app reconciliation (FR-29) for statements, with a PDF-only statement entered by hand, and the app's screens for every figure a compute tool returns.
 
@@ -883,17 +906,18 @@ With read scope, Claude can ask the app for this month's payment plan, payoff co
 **Consequences (testable):**
 - Every figure in a compute response comes from the money layer, and a compute tool changes nothing; a contract test compares each response with the money layer's result for the same input (FR-19).
 - Each response carries a short provenance line Claude can quote: its source, and the dates of the rates and prices it used.
-- Each response names every Claude-entered input it used that the owner has not confirmed (FR-65).
+- Each response names every Claude-entered input it used that the owner has not confirmed, and any still awaiting confirmation on the accounts it covers (FR-65).
 - Each response states the oldest current through date among the accounts it used, and flags any older than the limit the owner sets (A-12).
-- Every forecast figure in a compute response carries its confidence level, and a lowest balance carries the confidence of its day.
+- Every forecast figure in a compute response carries its confidence level, and a lowest balance carries the confidence of its day and what the forecast leaves out (FR-44).
 
 #### FR-54: Write tools [new]
 
-With write scope, Claude can do only what this list names, and §7.2 and `addendum.md` §3.8 cite it as the one list: record and correct transactions and transfers; void them; categorize transactions; create and edit rules; add and rename categories; resolve review queue items (FR-32); stage and confirm import rows; enter statements (closing balance and date, and for a card the minimum payment and printed payment due date); create accounts and change their details; enter account terms and cuota purchases; create or change budgets, goals, recurring events (subscriptions included), planned events, and the monthly extra; and, once FR-42 starts, confirm or dismiss its proposals. Each write tool covers the records of the release that ships them (§9.3).
+With write scope, Claude can do only what this list names, and §7.2 and `addendum.md` §3.8 cite it as the one list: record and correct transactions and transfers; void them; categorize transactions; create and edit rules; add and rename categories; resolve review queue items (FR-32); stage and confirm import rows; enter statements (closing balance and date, and for a card the minimum payment and printed payment due date); create accounts and change their details; enter account terms, cuota purchases, and the split of a loan or mortgage payment or its all-principal mark (FR-37); create or change budgets, goals, recurring events (subscriptions included), planned events, and the monthly extra; mark a transfer as a goal contribution or a goal withdrawal (FR-35); and, once FR-42 starts, confirm or dismiss its proposals. Each write tool covers the records of the release that ships them (§9.3).
 
 **Consequences (testable):**
-- No write tool deletes or archives an account, merges or archives a category, sets a balance or a debt directly, changes an opening balance, opening date, or starting debt other than by an adjustment (FR-18), flags a subscription as unwanted, or changes sign-in, TOTP, connected clients, or alert settings.
-- Account terms and closing balances that Claude enters take effect only once the owner confirms them in the app; every other write takes effect at once, logged and undoable (FR-55, FR-65).
+- No write tool deletes or archives an account, merges or archives a category, sets a balance or a debt directly, sets a cash buffer (FR-43), changes an opening balance, opening date, or starting debt other than by an adjustment (FR-18), flags a subscription as unwanted, or changes sign-in, TOTP, connected clients, or alert settings.
+- Account terms, statement entries, opening balances, starting debts, and adjustments that Claude enters take effect only once the owner confirms them in the app (FR-65); every other write takes effect at once, logged and undoable (FR-55).
+- Each connected client may make at most 100 write calls an hour and 500 a day (A-13). Beyond either limit, a write call changes nothing, returns a limit error, and is logged. The first refusal in each hour or day raises an alert that names the client (FR-48).
 - A deletion requested through Claude becomes a void; the void tool is the connection's only removal.
 - A write tool called with read scope changes nothing, returns a scope error, and is logged.
 - Amounts and dates arrive as text with a declared format; the money layer parses them under R-13, and the response returns the values stored. Text R-13 rejects is refused with its reason.
@@ -906,10 +930,13 @@ With write scope, Claude can do only what this list names, and §7.2 and `addend
 **Consequences (testable):**
 - Every tool call is logged with its connected client, tool, time, and inputs; every write from any source also keeps before and after values (A-10).
 - The feed shows Claude's transactions with source Claude.
-- The owner can undo any logged write from the app. An undo reverts one write call as a unit: it first lists every record it will change, with before and after values, and restores only the fields that write changed. When a later write changed one of those fields, the undo is refused and names that write.
+- The owner can undo any logged write from the app, except a rate re-lock on its own (R-2). An undo reverts one write call as a unit: it first lists every record it will change, with before and after values, and restores only the fields that write changed. When one of those fields no longer holds the value that write set, the undo is refused and names the write that changed it; a later write that was itself undone no longer blocks the undo.
+- Undoing a write that created a record voids that record, whatever later edits changed, so it stays in history and counts in SM-C1. Such an undo is refused while other live records reference the record (transactions on an account; transactions, rules, or budgets in a category; contributions to a goal; fulfilled occurrences of a recurring event), and it names them; the owner can archive an account or a category instead (FR-12, FR-30).
+- Undoing a void warns when a transaction posted since is a likely duplicate of the restored one (A-5), and offers to void that transaction (whose clearing row, if any, then clears the restored one) or to keep both, so one charge never counts twice.
+- The owner can undo one connected client's writes over a chosen time range as one action. The range undo first lists every record it will change, undoes that client's writes newest first, lists and skips any single undo the rule above refuses, and applies only after the owner confirms, undoing only the listed writes; if a listed record changed after the list was made, it lists again first.
 - Undoing a merge splits it back from what the merge recorded (FR-30), and undoing one side of a transfer reverts both.
 - Undoing an import match states that the statement row will post as new, and applies only after the owner confirms (UJ-6).
-- An undo is itself a logged write, and it can be undone.
+- An undo, a range undo included, is itself a logged write, and it can be undone.
 - The audit log filters by date.
 
 #### FR-56: Conversational capture [new]
@@ -939,8 +966,8 @@ When the owner reports a transaction in conversation, Claude records it with the
 Every input that a figure rests on records who entered it, and the inputs with the most weight wait for the owner when Claude enters them. (reviewer gate: `review-adversarial.md` C2)
 
 **Consequences (testable):**
-- Every account term, cuota purchase, rule, and closing balance records its provenance: the owner in the app, Claude through a named connected client, or an import.
-- An account term or a closing balance that Claude enters waits in the review queue and takes effect only when the owner confirms it with one tap in the app; rejecting it leaves the previous value, if any, in force. Only the owner confirms, never Claude.
+- Every account term, cuota purchase, rule, statement entry (closing balance and date, and for a card its minimum payment and printed payment due date), opening balance, starting debt, and adjustment records its provenance: the owner in the app, Claude through a named connected client, or an import.
+- An account term, a statement entry, an opening balance, a starting debt, or an adjustment that Claude enters waits in the review queue and takes effect only when the owner confirms it with one tap in the app, a statement entry's values together; rejecting it leaves the previous value, if any, in force. Only the owner confirms, never Claude. Undoing a confirmation or a rejection returns the input to waiting, with the previous value in force.
 - Every other Claude write takes effect at once, logged and undoable (FR-55). The owner can confirm a Claude-entered cuota purchase or rule in the app.
 - A compute response that depends on a Claude-entered input the owner has not confirmed names that input (FR-53).
 
@@ -969,8 +996,9 @@ Every input that a figure rests on records who entered it, and the inputs with t
 #### FR-60: Every MVP screen on the contract [new]
 
 **Consequences (testable):**
-- Every screen the MVP needs (sign-in and TOTP, dashboard, accounts, feed, import, categories and rules, review queue, budgets, goals, debts and the payment plan, recurring events and subscriptions, forecast, spending report, alert list, connected clients and audit log, settings) is built on the contract. Release 1 builds the screens its FRs need, and Release 2 the rest (§9.3).
+- Every screen the MVP needs (sign-in and TOTP, the authorization consent screen, dashboard, accounts, feed, import, categories and rules, review queue, budgets, goals, debts and the payment plan, recurring events and subscriptions, forecast, spending report, alert list, connected clients and audit log, settings) is built on the contract. Release 1 builds the screens its FRs need, and Release 2 the rest (§9.3).
 - No screen keeps the old palette or components.
+- Navigation offers only the screens the current release ships, and no link leads to a missing page.
 
 #### FR-61: Desktop first, 360px floor [new]
 
@@ -987,25 +1015,26 @@ Every input that a figure rests on records who entered it, and the inputs with t
 
 ## 6. Cross-Cutting NFRs
 
-- **NFR-1 Money representation.** COP and USD are integer minor units; crypto quantities keep their asset's precision. Arithmetic on money happens only in the money layer, enforced by a lint rule that covers identifiers, member expressions, compound assignment, and division (deferred item 6). A computed value is rounded half-even, at one point only: when it is stored or shown. A shown total rounds the exact sum, never the shown rows. When an amount is divided (cuotas, installments, splits), the parts sum exactly to the whole, with the residue on the last part.
+- **NFR-1 Money representation.** COP and USD are integer minor units; crypto quantities keep their asset's precision. Arithmetic on money happens only in the money layer, enforced by a lint rule that covers identifiers, member expressions, compound assignment, and division (deferred item 6). A computed value is rounded half-even once, to its minor unit, when it is stored, or once, to what is shown, when it is never stored. Stored COP values keep their centavos, and showing one rounds the stored value half-even to the peso, a display step that never changes what is stored (R-1). The one exception is the goal plan's monthly contribution needed, which rounds up to the peso for COP or the cent for USD, so planned contributions never fall short (FR-35). A shown total rounds the exact sum, never the shown rows. When an amount is divided (cuotas, installments, splits), the parts sum exactly to the whole, with the residue on the last part.
 - **NFR-2 Time and locale.** Every date is a Bogotá calendar date; scheduled jobs run on the Bogotá date, and end-of-day jobs run after the Bogotá day ends. Amounts render in es-CO conventions: COP with no decimals, USD with two (A-8). Negative amounts use a true minus sign.
-- **NFR-3 Accessibility.** WCAG 2.2 AA. On top of it, the contract floor: 44px targets on both axes, a visible focus ring that appears instantly and is never removed, reduced motion honored, no horizontal scroll at 360px, a skip link first, one h1 per page, and body text of 14px or more. Because the automated accessibility checks wired into the contract's review test against WCAG 2.1, the recorded manual pass (FR-58) also checks the four 2.2 criteria that matter here: 2.4.11 Focus Not Obscured (a sticky header never hides the focused element), 2.5.8 Target Size, 3.3.7 Redundant Entry (saved column mappings, nothing asked twice), and 3.3.8 Accessible Authentication (password and TOTP fields accept paste and password managers).
+- **NFR-3 Accessibility.** WCAG 2.2 AA. On top of it, the contract floor: 44px targets on both axes, a visible focus ring that appears instantly and is never removed, reduced motion honored, no horizontal scroll at 360px, a skip link first, one h1 per page, and body text of 14px or more. Because the contract states WCAG 2.1 AA, the recorded manual pass (FR-58) also checks all six A and AA criteria new in 2.2: 2.4.11 Focus Not Obscured (a sticky header never hides the focused element), 2.5.7 Dragging Movements (every action that drags also works with a single pointer and no drag, and any file drop area or slider has a button or text field alternative), 2.5.8 Target Size, 3.2.6 Consistent Help (any help appears in the same order relative to the other content on every screen that offers it), 3.3.7 Redundant Entry (saved column mappings, nothing asked twice), and 3.3.8 Accessible Authentication (password and TOTP fields accept paste and password managers).
 - **NFR-4 Sessions.** This governs the screens. Every session completes TOTP (FR-2). A session ends after 30 minutes idle, meaning no authenticated request for 30 minutes, and after 24 hours in any case.
 - **NFR-5 Grants.** This governs tool calls, which run on grants, not sessions. A grant's write scope lapses 30 days after issue and its read scope 90 days after issue; the owner then reconnects with password and TOTP. Revoking a connected client takes effect on its next call. A connected client unused for 30 days is disconnected.
-- **NFR-6 Dependencies.** No deploy goes out with a known high or critical advisory in production dependencies, except that a deploy which removes at least one known advisory and adds none may go out. Before the first deploy, the upgrade plan's order in `addendum.md` §4 governs. A new dependency version is adopted only after it has been public for 7 days.
+- **NFR-6 Dependencies.** A known advisory is one that the package manager's audit of production dependencies reports at high or above, and the audit runs before every deploy. While a known advisory is open, the owner accepts it, mitigates it, or takes the affected part of the deployment (the AI connection or the whole app) offline, recorded with the advisory ID and a revisit date. No deploy adds a known advisory. A deploy that adds none may go out when it removes at least one, or when every known advisory still open has such a recorded response; NFR-13's rebuilds follow the same rule. Before the first deploy, the upgrade plan's order in `addendum.md` §4 governs. A new dependency version is adopted only after it has been public for 7 days, except the version a known advisory names as its fix, which may be adopted at once after the owner reviews its changes, recorded with the advisory ID.
 - **NFR-7 Privacy.** No full account number is stored or returned, and no tool response carries a full account number, a credential, or a token. App logs carry no credentials, tokens, account numbers, or transaction contents; the audit log is the only record of transaction contents, and only the owner reads it. A canary test seeds secret-shaped values (a password, a token, a 16-digit number, a description) and fails if any appears in captured logs. Alert emails carry no amounts, balances, merchants, or account details. The app calls no LLM API, and what reaches the AI provider is the owner decision in §7.1. Fixtures, seeds, journeys, and examples are fictional.
 - **NFR-8 Data freshness.** Every converted value shows the date of the rate or price it used. A TRM is stale only when no stored TRM covers the date it is used for (R-2); a price older than 2 days is labeled stale.
-- **NFR-9 Performance.** Measured as server time to last byte at the 95th percentile, for screens and tool calls alike: any screen within 1 second and any tool call within 2 seconds on the target host, with the host size and the fixture recorded with each run. Until the ledger nears 20.000 transactions, the targets are measured on real data and a modest fictional seed; the 20.000-transaction run happens then. Lighthouse desktop scores on the dashboard and the feed: performance at least 90, accessibility 100.
+- **NFR-9 Performance.** Measured as server time to last byte at the 95th percentile, for screens and tool calls alike: any screen within 1 second and any tool call within 2 seconds on the target host, with the host size and the kind of fixture (real data or the fictional seed) recorded with each run; real data never enters the repository. Until the ledger reaches 15.000 transactions, the targets are measured on real data and a modest fictional seed; the 20.000-transaction run happens then. Lighthouse desktop scores on the dashboard and the feed: performance at least 90, accessibility 100.
 - **NFR-10 Quality gates.**
   - Typecheck, tests, and lint pass before every push and in continuous checks (FR-17).
   - Lint allows no warning except the five the owner accepted on 2026-11-26 (deferred item 1), each of which goes away when the code carrying it is patched or replaced; no new warning is allowed.
   - Coverage: 100 percent of the money layer's code statements and branches, and 80 percent of lines in request validation, the API routes, and the domain modules (import parsing, duplicates and matches, transfers, categorization, budgets, goals, payoff comparison, payment plan, payment scenarios, forecast, subscriptions).
-  - Installment schedules, payoff comparisons, payment scenarios, and the EA to monthly conversion are checked against fixtures computed outside the code, UVR conversion (if FR-23 applies) against published values, and the money layer against negative and zero amounts and at the largest amount it accepts, 99.999.999.999,99 in COP or USD (A-14), with one unit more rejected.
-  - The es-CO output is checked for four-digit COP amounts such as 1.234 and for no stray ",00" on COP, and the holiday data is checked against Ley 51 de 1983 for two years, Holy Week included.
+  - Installment schedules, payoff comparisons, the payment plan, payment scenarios, the forecast, and the EA to monthly conversion are checked against fixtures computed outside the code, UVR conversion (if FR-23 applies) against published values, and the money layer against negative and zero amounts and at the largest amount it accepts, 99.999.999.999,99 in COP or USD (A-14), with one unit more rejected. Those fixtures include a payment plan where a later month's extra decides how much of this month's is held back, one where it holds all of this month's back, and a forecast across several card cycles.
+  - The es-CO output is checked for four-digit COP amounts such as 1.234, for no stray ",00" on COP, and for the COP or USD code on every amount with no bare "$". The holiday data is checked against Ley 51 de 1983 for two years, Holy Week included.
   - Every bug fix comes with a regression test.
-  - Each journey UJ-1 to UJ-8 has one end-to-end check, with TOTP handled by a test authenticator: the check drives the screens and sends each Claude step as its tool calls through a scripted MCP client, asserting tool responses and stored state, never Claude's wording; Claude's own steps are FR-50's recorded manual check.
-- **NFR-11 Operability.** An external monitor checks the health endpoint at least every 5 minutes and emails the owner after 2 failed checks in a row, so the owner learns within 10 minutes that the app is unreachable. A scheduled self-check runs a scripted MCP client against the deployed AI connection every hour (A-12), connecting and making one read, and a failed self-check marks the health endpoint as failing, so the monitor alerts. A failed scheduled job (rates, prices, balance snapshots, backups, restore checks, scans, alert sends, the self-check) shows in the app with its last success time, and a job with no success within twice its interval shows as failed.
+  - Each journey UJ-1 to UJ-8 has one end-to-end check, with TOTP handled by a test authenticator: the check drives the screens and sends each Claude step as its tool calls through a scripted MCP client, asserting tool responses and stored state, never Claude's wording; Claude's own steps are FR-50's recorded manual check. Each release runs the checks for the journey steps it ships, so the UJ-7 and UJ-8 checks come with Release 2.
+- **NFR-11 Operability.** An external monitor checks the health endpoint at least every 5 minutes and emails the owner after 2 failed checks in a row, so the owner learns within 10 minutes that the app is unreachable. A scheduled self-check runs a scripted MCP client against the deployed AI connection every hour (A-12): it connects and reads the server's published metadata, stopping before authorization so it holds no grant, and a failed self-check marks the health endpoint as failing, so the monitor alerts. FR-50's recorded check covers an authorized read at each release. A failed scheduled job (any job in the one list of `addendum.md` §3.2) shows in the app with its last success time, and a job in use with no success within twice its interval shows as failed and marks the health endpoint as failing, so the monitor alerts even when the job runner itself has stopped.
 - **NFR-12 Cost.** The app runs on one small VPS plus free tiers; no paid API is required. The AI connection relies on the owner's Claude plan (A-15).
+- **NFR-13 Host upkeep and time away.** The host installs operating system security updates automatically. Every service of the deployment is rebuilt from its patched base at least monthly, and again after an advisory at high or above in that base; NFR-6's 7-day delay governs the app's package dependencies, not these updates. While the owner is away, the scheduled jobs, backups, restore checks, alerts, and the external monitor run unattended, and items that need the owner wait in the review queue. On return, the owner reconnects any connected client whose grant lapsed or that was disconnected after 30 days unused (NFR-5) and imports each account's missed statements in date order, so each statement period starts where the last one closed (FR-29). `addendum.md` §3.9 holds the mechanisms.
 
 ## 7. Constraints and Guardrails
 
@@ -1022,7 +1051,7 @@ Every input that a figure rests on records who entered it, and the inputs with t
 ### 7.2 Safety
 
 - The app never moves money and never contacts an institution: it records and computes.
-- Claude's writes are bounded by the one list in FR-54, logged, and undoable (FR-55), and the inputs with the most weight wait for the owner's confirmation (FR-65).
+- Claude's writes are bounded by the one list in FR-54 and its per-client write limit, logged, and undoable one write or one client's time range at a time (FR-55), and the inputs with the most weight wait for the owner's confirmation (FR-65).
 - Threat statement: statement text is untrusted data that returns through read tools in later conversations; a disclosure cannot be undone; and undo protects integrity only when the owner sees the change. So read tools mark statement text and bound its length (FR-52), the server instructions say it is data, never an instruction (FR-57), the alert list and the weekly digest count Claude's writes by type (FR-48, FR-49), and §7.1's operating rule keeps the finance connector apart from connectors that send data out.
 - Every figure a tool returns comes from the money layer with its source and the dates of its rates and prices, and compute responses carry a short provenance line (FR-53). The app guarantees its own figures, not Claude's wording; the tool descriptions ask Claude to cite those figures rather than compute its own (A-1).
 
@@ -1047,7 +1076,7 @@ Every input that a figure rests on records who entered it, and the inputs with t
 
 ### 9.1 In Scope
 
-- Fix-first scope (§5.1: FR-1 to FR-17, FR-63, and FR-64, with upgrade steps U1 to U6 in `addendum.md` §4), before any new feature. Deferred items 3, 4, 5, and 8 in `addendum.md` §5 are the epics step's call.
+- Fix-first scope, before any new feature: §5.1 (FR-1 to FR-17, FR-63, and FR-64, with upgrade steps U1 to U6 in `addendum.md` §4), the defect fixes inside FR-18, FR-20, FR-26, FR-45, and FR-23 (if it applies), and deferred item 1's shared sign-in redirect task (§10). Deferred item 3 is ruled: the unused testing-library packages are removed before U1 and return only with component tests (`addendum.md` §4). Deferred items 4, 5, and 8 in `addendum.md` §5 are the epics step's call.
 - Accounts and money (§5.2): savings accounts in COP and USD, credit cards with cuotas, loans, a mortgage, and crypto accounts. The UVR part applies only if Open Question 1 resolves yes.
 - Transactions, transfers, file import, and reconciliation (§5.3, §5.4).
 - Categorization with rules and the review queue (§5.5).
@@ -1080,6 +1109,7 @@ Deferred, each with its reason and when to revisit, plus the one gated FR and it
 - AFC or FPV, listed stocks and ETFs with their price feeds, and CDTs (S8-04, S8-05, S8-40): outside the list decision 3 keeps. Revisit when the ledger needs one.
 - The original plan's other account types and currencies (checking accounts, lines of credit, investment funds, a generic investment account, EUR): outside the list decision 3 keeps. Revisit when the ledger needs one.
 - Open Graph tags: they matter only for the public demo (decision 1). Revisit with the public demo.
+- The README architecture diagram from the original plan: it serves visitors, like the public demo (decision 1). Revisit with the public demo.
 - Loans indexed to DTF or IBR (R-7). Revisit if an indexed loan needs tracking.
 - Optional major dependency upgrades (U7 in `addendum.md`). Revisit after Release 2, or sooner when NFR-6 needs a major version to clear an advisory.
 
@@ -1094,13 +1124,13 @@ The release sequence in §10 is binding. Release 1 is the working ledger, and it
 | §5.1 Trustworthy baseline | FR-1 to FR-17, FR-63, FR-64 | | |
 | §5.2 Accounts and money | FR-18 to FR-22; FR-23 only if Open Question 1 resolves yes | | |
 | §5.3 Transactions and transfers | FR-24 to FR-26 | | |
-| §5.4 File import and reconciliation | FR-27 to FR-29 | | |
-| §5.5 Categorization | FR-30 to FR-32 | | |
+| §5.4 File import and reconciliation | FR-27 to FR-29 | FR-29, the statement expected alert | |
+| §5.5 Categorization | FR-30 to FR-32 | FR-32, the occurrence items and, once FR-42 starts, subscription price changes | |
 | §5.6 Budgets and goals | | FR-33 to FR-35 | |
-| §5.7 Debt, cards, and payment planning | FR-36 and FR-37, record keeping: cuota counts, due days, statement minimums, and splits | FR-36 and FR-37, the rest: schedules, estimated minimums, and payment spread; FR-38 to FR-40 | |
+| §5.7 Debt, cards, and payment planning | FR-36 and FR-37, record keeping: cuota counts, purchase rates and dated card rates, due days, statement minimums, and splits | FR-36 and FR-37, the rest: schedules, estimated minimums, and payment spread; FR-38 to FR-40 | |
 | §5.8 Recurring calendar, subscriptions, and forecast | | FR-41, FR-43, FR-44 | FR-42, gated until the ledger holds six months of card and account history |
 | §5.9 Dashboard, net worth, and reports | FR-45, minimal: landing, net worth, debt summary, review queue count, current through dates | FR-45, the rest: budget status and the lowest forecast balance; FR-46, FR-47 | |
-| §5.10 Alerts | FR-48: the email channel and the alert list (with FR-15), and the payment due, new connected client, failed backup or restore check, and repeated failed attempts (FR-64) types, always on | FR-48: the budget and statement expected types and the per-type setting; FR-49 | |
+| §5.10 Alerts | FR-48: the email channel and the alert list (with FR-15), and the payment due, new connected client, failed backup or restore check, repeated failed attempts (FR-64), and write limit (FR-54) types, always on | FR-48: the budget and statement expected types and the per-type setting; FR-49 | |
 | §5.11 The AI connection | FR-50 to FR-52, FR-54 to FR-57, FR-65, for Release 1 records; FR-53's spending by category for a period | FR-53, the other compute tools; FR-52 and FR-54 for Release 2 records | |
 | §5.12 Redesign | FR-58, FR-59, FR-61, FR-62; FR-60 for Release 1 screens | FR-60 for Release 2 screens | |
 
@@ -1110,16 +1140,16 @@ Everything else in §9.2 is deferred past the MVP.
 
 The release sequence is binding; §9.3 lists every FR by release.
 
-- **Release 1, the working ledger:** all of §5.1 to §5.4; FR-30 to FR-32; the record-keeping half of FR-36 and FR-37 (cuota counts, due days, statement minimums and splits); a minimal FR-45; FR-48 with four alert types (payment due, new connected client, failed backup or restore check, and FR-64's repeated failed attempts), always on with no per-type setting; the read, write, and capture tools of §5.11, with FR-53's spending by category for a period; and those screens on the contract (§5.12). FR-48's email channel and alert list land with FR-15.
+- **Release 1, the working ledger:** all of §5.1 to §5.4; FR-30 to FR-32; the record-keeping half of FR-36 and FR-37 (cuota counts, purchase rates and dated card rates, due days, statement minimums, and splits); a minimal FR-45; FR-48 with five alert types (payment due, new connected client, failed backup or restore check, FR-64's repeated failed attempts, and FR-54's write limit), always on with no per-type setting; the read, write, and capture tools of §5.11, with FR-53's spending by category for a period; and those screens on the contract (§5.12). FR-48's email channel and alert list land with FR-15.
 - **Local capture-loop check:** before the VPS work, a local check of the capture loop runs: the AI connection on a local instance with a fictional ledger, driven from Claude Code.
 - **Launch:** Release 1's first deploy. It starts the success clock (§11).
 - **Go/no-go point:** Release 2 starts only after one statement cycle is reconciled on every account that receives statements.
-- **Release 2, the planning features:** FR-33 to FR-35; FR-38 to FR-44, with FR-42 gated; FR-46, FR-47, FR-49, and FR-53's other compute tools; the per-type alert setting and the remaining alert types; the rest of FR-36, FR-37, and FR-45; and their screens on the contract.
+- **Release 2, the planning features:** FR-33 to FR-35; FR-38 to FR-44, with FR-42 gated; FR-46, FR-47, FR-49, and FR-53's other compute tools; the per-type alert setting and the remaining alert types; the Release 2 parts of FR-29 and FR-32; the rest of FR-36, FR-37, and FR-45; and their screens on the contract.
 
 Order within and around the releases:
 
-1. Fix-first scope (§5.1) before any new feature (decision 8).
-2. Encrypted backups and a passing manual restore check (FR-15) before the auth library upgrade, whose migration can block TOTP for the owner if it goes wrong (U2 in `addendum.md`).
+1. Fix-first scope before any new feature (decision 8): all of §5.1, the defect fixes inside FR-18, FR-20, FR-26, FR-45, and FR-23 (if it applies), and deferred item 1's shared sign-in redirect task. Replacing a fix-first defect's screen with its redesigned version counts as fix-first work when it follows the UX step and pulls FR-58's adoption forward for that screen; whether to patch or replace stays the epics step's call.
+2. Encrypted backups, a passing manual restore check (FR-15), and a passing run of FR-63's recovery drill before the auth library upgrade, whose migration can block TOTP for the owner if it goes wrong (U2 in `addendum.md`).
 3. The auth library upgrade before the AI connection's authorization (FR-50, FR-51) and before any new sign-in method (FR-8).
 4. Every FR in §5.1 passing before the first deploy (decision 7). Apart from the local capture-loop check on a fictional ledger, the AI connection goes live only on the deployed app, reachable over HTTPS.
 5. Crypto quantity support in the money layer before crypto accounts (FR-21).
@@ -1143,7 +1173,7 @@ Launch is Release 1's first deploy, and it starts the success clock. Baseline: t
 - **SM-5: Capture ahead of the statement.** The share of each month's statement rows that matched an earlier Claude capture (FR-28), from launch. It has no target in the MVP: it shows whether conversational capture earns its matching cost. Validates FR-28, FR-56.
 
 **Counter-metrics (do not optimize)**
-- **SM-C1: Correction rate.** If more than 5 percent of a month's Claude transactions (captured, or staged through the AI connection) are voided, or have their account, amount, currency, date, or direction changed, within 30 days of entry, capture is failing. Match confirmations do not count as corrections. Never push SM-2 up at its expense. Counterbalances SM-2.
+- **SM-C1: Correction rate.** If more than 5 percent of a month's Claude transactions (captured, or staged through the AI connection) are voided (an undone creation included, FR-55), or have their amount or date changed, within 30 days of entry, capture is failing. A wrong account or direction is fixed by a void and a new record, so it counts as a void. Match confirmations do not count as corrections. Never push SM-2 up at its expense. Counterbalances SM-2.
 - **SM-C2: Time in the app.** An owner judgment, not measured: the thesis is that Claude does the work. Counterbalances any engagement reading of SM-1 and SM-2.
 - **SM-C3: Features shipped.** An owner judgment, not measured: a reconciled ledger beats breadth. Counterbalances scope growth against SM-1.
 
@@ -1159,20 +1189,20 @@ Launch is Release 1's first deploy, and it starts the success clock. Baseline: t
 
 ## 13. Assumptions Index
 
-*Every assumption, with where it appears. The owner confirmed A-1 to A-10 on 2026-11-26, accepting A-2 and A-3 without correction after decision 3. The reviewer gate rulings restated A-1 and A-3 and set A-5's window in business days, and A-9 now uses the glossary's alert term. A-11 to A-15, new at the reviewer gate, were confirmed on 2026-11-26 as defaults that the epic building each one revisits (A-11 in the import epic, with Open Question 3).*
+*Every assumption, with where it appears. The owner confirmed A-1 to A-10 on 2026-11-26, accepting A-2 and A-3 without correction after decision 3. The reviewer gate rulings restated A-1 and A-3 and set A-5's window in business days, and A-9 now uses the glossary's alert term. A-11 to A-15, new at the reviewer gate, were confirmed on 2026-11-26 as defaults that the epic building each one revisits (A-11 in the import epic, with Open Question 3). The post-final update of 2026-11-27 added the connected client write limits to A-13 as defaults on the same terms, and widened A-7 to goal withdrawals.*
 
-- **A-1** (§1, §7.2, FR-57): every figure a tool returns comes from the money layer with its source and the dates of its rates and prices, which the app guarantees; Claude, asked through the tool descriptions, cites those figures rather than computing its own, which the app cannot enforce.
+- **A-1** (§1, §7.2, FR-53, FR-57): every figure a tool returns comes from the money layer with its source and the dates of its rates and prices, which the app guarantees; Claude, asked through the tool descriptions, cites those figures rather than computing its own, which the app cannot enforce.
 - **A-2** (§4 R-7, FR-37): loans and the mortgage carry a fixed EA rate the owner enters.
 - **A-3** (§4 R-4, FR-36): a credit card can carry USD charges beside its COP charges; the app holds them on a linked USD card account.
 - **A-4** (§4 R-5, FR-36): a card's interest terms come from its statement terms, entered per card.
-- **A-5** (§3, FR-11, FR-26, FR-28, FR-56, §12): the match window is the same account and amount within 3 business days either side, inclusive.
+- **A-5** (§3, FR-11, FR-26, FR-28, FR-55, FR-56, §12): the match window is the same account and amount within 3 business days either side, inclusive.
 - **A-6** (FR-29): statement reconciliation is in the MVP, because SM-1 measures it.
-- **A-7** (FR-35): goal progress counts contributions, not the funding account's balance.
+- **A-7** (FR-35): goal progress counts contributions, less goal withdrawals, not the funding account's balance.
 - **A-8** (NFR-2): USD amounts follow es-CO conventions with two decimals.
 - **A-9** (FR-48): payment due alerts fire 3 days before the payment due date and on the day.
 - **A-10** (FR-25, FR-55): the audit log records writes from every source, so every write can be undone.
-- **A-11** (FR-26, FR-28, FR-36, FR-37, FR-41, §12): matching and computation defaults. A staged row within 15 percent of a Claude capture's amount is offered as a match; a cross-currency transfer links at an implied rate within 5 percent of the TRM; a transaction fulfils an occurrence within 10 percent of its amount and 5 business days of its date; a partial first period accrues (1 + EA) raised to the power days/365, minus 1, on the principal, counting actual days.
+- **A-11** (§3, FR-26, FR-28, FR-32, FR-35, FR-36, FR-37, FR-41, FR-42, §12): matching and computation defaults. A staged row within 15 percent of a Claude capture's amount is offered as a match; a cross-currency transfer links at an implied rate within 5 percent of the TRM; a transaction fulfils an occurrence within 10 percent of its amount and 5 business days of its date; a partial first period accrues (1 + EA) raised to the power days/365, minus 1, on the principal, counting actual days.
 - **A-12** (FR-15, FR-20, FR-29, FR-49, FR-53, NFR-11, §11): time windows. A statement is expected within 15 days of its closing date, which is also SM-1's default allowance; a current through date older than 35 days is flagged; manual TRM entry is offered when no TRM covers a date 3 days after it; a restore check alert fires with no passing check in 35 days or no backup in 26 hours; the AI connection self-check runs hourly; the weekly digest goes out on Monday at 07:00 Bogotá.
-- **A-13** (FR-2, FR-6, FR-48, FR-64): access and alert bounds. Access tokens under a grant live at most 1 hour; after 5 failed attempts within 15 minutes from one source, or 20 within an hour for the account, attempts are refused for 15 minutes; each credential has at least 32 random characters; a new connected client alert is sent within 5 minutes, and a scheduled alert within 1 hour of its job.
+- **A-13** (FR-2, FR-6, FR-48, FR-54, FR-64): access and alert bounds. Access tokens under a grant live at most 1 hour; a connected client may make at most 100 write calls an hour and 500 a day; after 5 failed attempts within 15 minutes from one source, or 20 within an hour for the account, attempts are refused for 15 minutes; each credential has at least 32 random characters; a new connected client alert is sent within 5 minutes, and a scheduled alert within 1 hour of its job.
 - **A-14** (FR-9, FR-22, FR-27, FR-52, FR-61, NFR-10): size and input bounds. Page size 50 by default and 200 at most; import files up to 10 MB or 5.000 rows; statement text fields up to 500 characters; read tools default to totals and the last 30 days; EA rates from 0 to 100 percent, with the monthly equivalent to 2 decimal places; amounts up to 99.999.999.999,99 in COP or USD; desktop acceptance at 1440 by 900 CSS px.
 - **A-15** (§1, §5.11, FR-50, NFR-12, §7.3): the owner's Claude plan includes custom connectors in claude.ai web, Claude Desktop, and Claude Code, with enough usage to read a month's statements; FR-50's recorded check confirms it each release.

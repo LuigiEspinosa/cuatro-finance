@@ -15,6 +15,9 @@ Positional IDs used in `prd.md`, `.memlog.md`, and this addendum. All refer to t
 - **Deferred item N**: the N-th entry of `_bmad-output/implementation-artifacts/deferred-work.md`.
 - **Guide phase N**: the N-th phase of the original plan's build order (private file, never quoted).
 - **T-NN and reviewer IDs**: T-NN is a theme of the reviewer gate, listed with its title, ruling, and source findings in `review-themes.md` in this folder and ruled in `.memlog.md`. A reviewer ID such as scope F14, adversarial M4, or domain D-14 is that review file's own finding ID.
+- **PF-NN and L-NN**: a finding of the post-final review, `review-post-final-2026-11-27.md` in this folder, ruled in `.memlog.md` (§2.4).
+- **G-NN and C-NN**: G-NN is an item of the post-final update's reviewer gate, merged from the high findings of the `review-*-post-final-2026-11-27.md` files in this folder and ruled in `.memlog.md` (§2.4). C-NN is a finding of the compliance file among them.
+- **Triage items**: the gate's medium and low findings, merged and sorted in `review-triage-post-final-2026-11-27.md` in this folder (autofix A1 to A33, needs owner NO-1 to NO-3, with A7 ruled as NO-4, defer D1 to D20, reject R1 to R3, covered C1 to C9), ruled in `.memlog.md`. They are cited with the word triage, as in triage NO-2, so they never read as assumption or compliance IDs.
 
 ## 2. Decision record
 
@@ -28,10 +31,10 @@ Decision 9 was settled before the session: Cuatro Finance is a standalone public
 | 2. Capture without bank sync | Owner-supplied capture: conversation with Claude, statement files, manual entry | No bank sync provider covers Colombia (F7.1-01, F7.2-11); open finance will not reach a personal app in this horizon (F7.1-02) | Belvo (Brazil and Mexico only in 2026, about USD 1.000 a month for real data); bank alert email ingestion, deferred as a new inbound path of medium effort |
 | 3. Instruments | Savings accounts in COP and USD, credit cards with cuotas, a mortgage, crypto, other loans | The owner's answer | AFC or FPV, listed stocks and ETFs, CDTs (out of the MVP) |
 | 4. LLM use | Claude is the only model; the app calls no LLM API | The Vision already shares the data with Claude by design; amounts stay deterministic (F7.2-13) | Server-side LLM categorization and PDF extraction, which add a second data path and a stored key |
-| 5. Alert channel | Email for time-sensitive alerts plus an optional digest, carrying no figures | Claude cannot start a conversation, and the app is desktop first | Web Push first (S8-19 assumed a phone-first app); Telegram (S8-41) |
+| 5. Alert channel | Email for time-sensitive alerts plus an optional digest, carrying no amounts | Claude cannot start a conversation, and the app is desktop first | Web Push first (S8-19 assumed a phone-first app); Telegram (S8-41) |
 | 6. Tax features | After the MVP | A tax reform bill filed 2026-10-29 may change the rules (F7.1-09) | Tax features in v1 |
 | 7. Hosting | One small VPS; first deploy after the baseline; a returning demo is a separate deployment with its own database | Claude reaches the AI connection over HTTPS; Redis and n8n drop out, so the footprint shrinks | Managed hosting was not evaluated; the architecture step may revisit within NFR-12 |
-| 8. Fix first | Yes, with the security, defect, build, upgrade, and backup work of `prd.md` §5.1 | The assessment's own recommendation | Features first |
+| 8. Fix first | Yes: the security, defect, build, upgrade, and backup work of `prd.md` §5.1, plus the defect fixes inside the built but broken FRs of other features and deferred item 1's shared sign-in redirect task (`prd.md` §10) | The assessment's own recommendation | Features first |
 
 ### 2.2 Feature walk rulings by area
 
@@ -49,13 +52,35 @@ Decision 9 was settled before the session: Cuatro Finance is a standalone public
 
 Rulings that shape the steps below (the rest are in `.memlog.md` lines 80 to 85):
 
-- **T-01. Release 1.** A binding Release 1, the working ledger (§8), with launch at its first deploy and a go/no-go of one reconciled statement cycle per account before the planning features. Rejected: keeping the release order a suggestion, and a smaller Release 1 on patched screens with the redesign moved later.
-- **T-02. Owner confirmation.** Account terms and closing balances that Claude enters wait for the owner's confirmation in the app; other writes stay immediate, logged, and undoable. Rejected: provenance alone, a split write scope, and an MCP Apps confirmation view.
+- **T-01. Release 1.** A binding Release 1, the working ledger (§8), with launch at its first deploy and, before the planning features, a go/no-go of one reconciled statement cycle on every account that receives statements. Rejected: keeping the release order a suggestion, and a smaller Release 1 on patched screens with the redesign moved later.
+- **T-02. Owner confirmation.** Account terms and closing balances that Claude enters wait for the owner's confirmation in the app; other writes stay immediate, logged, and undoable. L-4 later widened owner confirmation to a statement's minimum payment and printed payment due date, opening balances, starting debts, and adjustments (`prd.md` FR-65). Rejected: provenance alone, a split write scope, and an MCP Apps confirmation view.
 - **T-04. Grant lifetimes.** An absolute lifetime of 30 days for write grants and 90 for read grants (§3.3). Rejected: no absolute lifetime beyond the 30-day unused rule.
 - **T-05. Provider exposure.** What the AI provider receives is recorded as an owner decision (`prd.md` §7.1), and spreadsheet imports are preferred over PDFs. Rejected: per-format PDF parsing in the app, which reopens decision 4.
 - **T-07. One currency per account.** A card's USD side is its own linked USD card account, and each crypto asset has its own crypto account (§3.6). Rejected: sub-balances in several currencies or assets inside one account.
 - **T-08. Cash.** A cash withdrawal posts as spending under a seeded cash category; per-purchase cash tracking is deferred. Rejected: a cash account type, which reopens decision 3's list.
 - **T-09. Subscription detection.** It starts once the ledger holds six months of history; until then a subscription is a recurring event. Rejected: detection from launch.
+
+### 2.4 Post-final review rulings
+
+The owner's calls on the post-final review of 2026-11-27 and on its reviewer gate, each with the alternative it rejected:
+
+- **PF-5. Unestimated inputs.** Unestimated stays outside the day confidence rule, and every lowest balance names what the forecast leaves out. Rejected: ranking unestimated below low, which would show every early forecast figure as unestimated until every category, unused ones included, held a budget.
+- **PF-6. Payment plan and forecast.** This month's extra is fitted against later months that pay the full monthly extra. Rejected: fitting it against later months at their minimums, which pays more now but leans on lower-confidence estimates and can contradict the payment scenario for the same extra.
+- **PF-8. Release 1 loan payments.** A payment lowers the debt by its whole amount until its split is entered, with a review queue item meanwhile; until then the debt reads low, and net worth high, by that payment's interest and charges. Rejected: a pending liability side, which keeps the debt at its pre-payment level and lowers net worth by the whole payment until then.
+- **PF-11. Goals across currencies.** Contributions convert at the latest TRM, so progress moves with the rate and a goal can stop showing as reached with no new transaction. Rejected: each contribution's locked rate, which can show a goal on track that today's rate no longer covers.
+- **PF-12. Crypto fees.** A fee paid in the asset lowers the quantity and keeps the total COP cost, so the average cost per unit rises. Rejected: posting it as spending, which needs a price at the fee's moment and a rule for the gain or loss on the fee's units.
+- **PF-13. Subscription detection.** The definitions are set now; price steps, skipped months, and currency drift wait for the FR-42 epic, which records, with fictional examples only, what it learns from real descriptors (`prd.md` §7.1, C-4). Rejected: deferring every definition to that epic.
+- **PF-14. Corrections.** SM-C1 counts voids and changes to amount or date. Rejected: letting FR-25 move a transaction between accounts or change its direction, which widens the write surface.
+- **PF-15. Advisory fixes.** The version an advisory names as its fix may skip the 7-day delay after the owner reviews its changes. Rejected: the delay for every version, which keeps a known advisory open for up to a week.
+- **PF-16. Runaway clients.** A per-client write limit with an alert, and an undo of one client's writes over a time range. Rejected: relying on revocation, single undos, and restores.
+- **PF-17. Host upkeep.** NFR-13 sets unattended host updates, monthly rebuilds, and an away rule. Rejected: upkeep by hand alone.
+- **Lows.** Rejected: L-3's capture stop rule, since the planning features do not depend on Claude capture, and L-5, since SM-1 already counts only closing balances the owner entered or confirmed. Deferred: L-2 to the epic that builds FR-48, L-3's effort estimate to the epics step, and L-21 to the architecture step's §3.3 re-check.
+- **G-7. Unused categories.** A category with no spending never counts as irregular: it projects its budget, or is unestimated until the ledger covers 6 months, after which it projects zero and feeds no account. Rejected: unestimated at any age, which keeps unused categories in every left-out list for good.
+- **G-10. Open advisories.** An advisory the owner accepted, mitigated, or answered by taking the affected part offline, recorded with its ID and a revisit date, stops blocking a deploy that adds no known advisory, NFR-13's rebuilds included. Rejected: blocking every deploy until a fix exists, which would stop the monthly rebuilds and every defect fix.
+- **Triage NO-1. Goal funding accounts.** A goal is funded only by a COP or USD savings account. Rejected: a crypto funding account, which needs price conversion, precision, and round-up rules that no journey uses.
+- **Triage NO-2. Self-check authorization.** The hourly self-check reads the server's published metadata and stops before authorization, holding no grant; FR-50's recorded check covers an authorized read each release. Rejected: a fourth, health-only client identity, which adds a credential, a scope, a lapse alert, and a renewal every 90 days.
+- **Triage NO-3. Release 2 alert setting.** The setting covers only the budget and statement expected types, so the five Release 1 types stay always on. Rejected: letting the owner turn off payment due alerts.
+- **Triage NO-4. All-principal mark.** The owner or Claude may mark a loan or mortgage payment all principal, since Claude can already enter a split with no interest. Rejected: an owner-only mark, which would protect nothing.
 
 ## 3. Technical choices for the architecture step
 
@@ -64,7 +89,7 @@ The facts in this section were verified on 2026-11-25 (assessment §7 and §10).
 ### 3.1 Hosting and deployment
 
 - One small VPS. The original plan sized a 4 vCPU, 8 GB ARM VPS for the app, a worker, the database, and n8n; without n8n and Redis, a smaller host may do.
-- Containers for the app, PostgreSQL, and the job runner as its own process, behind a reverse proxy with automatic HTTPS (the plan used Caddy, as other Cuatro projects do). The current proxy configuration does not route to the app (assessment §5), so it is replaced, not reused.
+- The packaging behind `prd.md` FR-16: containers for the app, PostgreSQL, and the job runner as its own process, behind a reverse proxy with automatic HTTPS (the plan used Caddy, as other Cuatro projects do). The current proxy configuration does not route to the app (assessment §5), so it is replaced, not reused.
 - The database and the job runner sit on a private network (FR-6). Migrations run on deploy. A health check endpoint backs the external uptime monitor (NFR-11).
 - When the demo returns, it is a separate deployment with its own database, and only it may ever expose a no-auth connector, with per-IP and global rate limits and result-size caps (F7.2-06). The returning demo refuses every write in one central layer, never through per-route checks.
 - Before the VPS work, a local capture-loop check runs the AI connection on a local instance with a fictional ledger, driven from Claude Code (T-01, `prd.md` §10).
@@ -75,7 +100,21 @@ The facts in this section were verified on 2026-11-25 (assessment §7 and §10).
 
 - Replace BullMQ and Redis (S8-18). Candidates: pg-boss (MIT) on the existing PostgreSQL, or a single scheduled runner. The pg-boss option covers cron, retries, dead-letter queues, and enqueueing inside a Prisma transaction, and needs Node 22.12 or later and its own connection string (F7.2-09). BullMQ's PostgreSQL backend shipped on 2026-07-30 and is young.
 - Which runner to use is this step's call (scope F14, which favors the single scheduled runner for this short list of jobs for one owner).
-- Jobs: TRM daily, crypto prices daily, UVR daily (only if FR-23 applies), balance snapshots daily (only if history is stored, §3.6), budget threshold checks daily, payment due reminders daily, subscription scan weekly (only once detection starts, T-09), backups daily, restore check monthly.
+- Jobs: this is the one list, with each job's cadence, that the `prd.md` glossary and NFR-11 point to.
+  - TRM: daily (R-2, FR-20).
+  - Crypto prices: daily (FR-21).
+  - UVR: daily, only if FR-23 applies.
+  - Balance snapshots: daily, only if history is stored (§3.6, FR-46).
+  - Payment due reminders: daily (FR-48, A-9).
+  - Budget threshold checks: daily, from Release 2 (FR-33).
+  - Statement expected check: daily (FR-29, A-12).
+  - Backup: daily (FR-15).
+  - Restore check: monthly (FR-15).
+  - Age checks on the backup and the restore check: hourly, so a missing backup is caught within FR-15's 26-hour bound (FR-15, A-12).
+  - AI connection self-check: hourly (NFR-11, A-12).
+  - Weekly digest: Mondays at 07:00 Bogotá while it is on, from Release 2 (FR-49, A-12).
+  - Subscription scan: weekly, once detection starts (FR-42, T-09).
+  - Alert sends: within 1 hour of the job that raised them, and within 5 minutes for a new connected client (FR-48, A-13).
 - Jobs run on the Bogotá date (R-9), and end-of-day jobs run after the Bogotá day ends.
 - The plan's rule stands: never create a queue inside a route handler or component.
 
@@ -88,7 +127,7 @@ The facts in this section were verified on 2026-11-25 (assessment §7 and §10).
 - Grants (T-04, NFR-5): a write grant lasts at most 30 days and a read grant at most 90, after which the owner reconnects with TOTP; short-lived access tokens sit under each grant. Only the client identities of the three acceptance apps (FR-50) may ask for consent, and the consent screen and the new-client alert name the client.
 - Untrusted text (T-26): read tools return third-party text, such as a statement description, in a delimited, length-bounded field marked as statement text, and the server instructions and tool descriptions say such text is data, never an instruction.
 - Public repository (T-29): the server instructions and tool descriptions also say the repository is public, so a drafted development prompt stays generic: a fictional owner, made-up numbers, account types instead of institutions or merchants, and no statement text.
-- Verification (T-30): each journey's end-to-end check sends Claude's steps as tool calls through a scripted MCP client (§3.7), and a scheduled self-check runs that client against the deployed connection (connect and one read) and alerts on failure (NFR-11).
+- Verification (T-30): each journey's end-to-end check sends Claude's steps as tool calls through a scripted MCP client (§3.7). A scheduled self-check runs that client against the deployed connection (connect and read the published metadata, stopping before authorization) and alerts on failure (NFR-11, triage NO-2).
 
 ### 3.4 Data sources
 
@@ -101,18 +140,19 @@ The facts in this section were verified on 2026-11-25 (assessment §7 and §10).
 
 ### 3.5 Email
 
-- Any transactional sending service on a free tier (the plan named Resend, with 3.000 emails a month free). SPF and DKIM on the sending domain. Messages carry no figures (FR-48).
+- Any transactional sending service on a free tier (the plan named Resend, with 3.000 emails a month free). SPF and DKIM on the sending domain. Messages carry no amounts (FR-48).
 
 ### 3.6 Money layer and data model notes
 
 - BIGINT minor units with decimal.js at precision 20 and half-even rounding, as the plan specified.
 - Crypto quantities need a column with enough scale for each asset; the plan's (20, 8) cannot hold an asset with more than 8 decimals (S5-01 shows that today's money layer rounds sub-centavo amounts to zero).
+- This step sets the largest crypto quantity, the USD price scale, and a working precision that holds both exactly (FR-21, PF-12).
 - Explicit precision for rates and UVR units; the plan used (20, 6) for UVR balances and exchange rates.
 - Dates are Bogotá calendar dates (R-9).
 - One currency per account (T-07): a card's USD side is its own USD card account, linked to the COP card and sharing its dates, and each crypto asset is its own crypto account.
-- Crypto cost basis is the average cost per asset, in COP (FR-21, verification V-21).
+- Crypto cost basis is the average cost per asset, in COP (FR-21, verification V-21). A fee paid in the asset raises it, since the total COP cost stays while the quantity falls; a sell's realized gain or loss is recorded on the crypto account (PF-12).
 - Debt terms on the liability account itself, instead of the scaffold's separate debt record, which has an untyped account reference, a misspelled enum, and no rate basis (assessment §5).
-- Loan and mortgage installments split into principal and interest by their schedules (FR-26, FR-37).
+- Loan and mortgage installments split into principal and interest from the lender's statement or, from Release 2, by the computed schedule; until a split exists, a payment lowers the debt by its whole amount (FR-26, FR-37).
 - Budgets are scoped to the owner like every other record (FR-4). The precomputed CashFlowPoint table is dropped: the forecast is computed on request and cached only if measured slow (S8-16).
 - Balance and budget history (FR-34, FR-46) reflect the ledger, late-dated writes included; whether that history is stored and recomputed or computed on read is this step's call (T-21, scope F4).
 - One compute engine serves both the payoff comparison (FR-38) and payment scenarios (FR-40), which stay two requirements (scope F7).
@@ -136,11 +176,11 @@ The facts in this section were verified on 2026-11-25 (assessment §7 and §10).
 
 ### 3.9 Operations
 
-One person runs the app (adversarial M4). The recurring work is the owner's: dependency upgrades and advisory triage under NFR-6, the restore checks (FR-15), the FR-63 recovery drill, and each account's statement import every month. The architecture step keeps the stack small enough for one person to run.
+One person runs the app (adversarial M4). The recurring work is the owner's: dependency upgrades and advisory triage under NFR-6, the restore checks (FR-15), the FR-63 recovery drill (before U2, before any later migration that touches auth tables, and at least yearly), and each account's statement import every month. Host upkeep follows NFR-13: within NFR-12's cost, this step picks how the host installs security updates unattended, how every service is rebuilt from its patched base at least monthly and after an advisory at high or above in that base, and which source reports those base advisories. The architecture step keeps the stack small enough for one person to run.
 
 ## 4. Upgrade plan
 
-The steps follow the order of assessment §4. Run typecheck and tests after each step, and adopt a release only after it has been public for 7 days (NFR-6). A package nothing uses is deleted, never upgraded (scope F15): U3 waits until its shadcn and storybook question is settled, and the unused testing-library packages (deferred item 3) are removed before the upgrade steps, to return only with component tests.
+The steps follow the order of assessment §4. Run typecheck and tests after each step. Adopt a release only after it has been public for 7 days, unless a known advisory names it as its fix and the owner has reviewed its changes, recorded with the advisory ID (NFR-6). A package nothing uses is deleted, never upgraded (scope F15): U3 waits until its shadcn and storybook question is settled, and the unused testing-library packages (deferred item 3) are removed before the upgrade steps, to return only with component tests.
 
 - **U0.** Unarchive the repository. Done 2026-11-26.
 - **U1.** next and eslint-config-next to 16.4.6 (exact pins); react and react-dom to 19.3.1. Next.js is at 16.4.5 today.
@@ -168,7 +208,7 @@ From `deferred-work.md`, numbered in its order:
 5. Make the Prisma CLI, the seed, and Next.js read the same env files with the same precedence. Today, with only the env file the README's setup creates, the migration CLI finds no database setting, and with both files the seed reads its settings from a different file than the app. The maintenance spec kept the current loader on purpose. Schedule this with item 4 and with FR-2's provisioning path, and decide the deploy's env source in the same change, since migrations run on deploy (§3.1).
 6. Extend the money arithmetic lint rule to member expressions, compound assignment, and division: now NFR-1. No such code exists today, which makes the extension free now; it lands before the first story that adds money arithmetic (`prd.md` §10).
 7. Bounded page size on list requests: now FR-9, baseline (raised at decision 8). A value out of range is brought into range rather than refused, as the item asks, and a request without one gets a fixed default.
-8. Align the package version with the CHANGELOG's latest release.
+8. Align the package version with the CHANGELOG's latest release. The CHANGELOG's existing entries stay as written, since each records what its release claimed at the time; the entry made with this alignment states what the repository holds (L-25).
 9. Whether `.env.development` is ignored: resolved, since every env file except `.env.example` is ignored.
 
 ## 6. Colombian rules research for later features
@@ -209,9 +249,9 @@ From a digest of the Cuatro design contract (cuatro-portfolio, contract 2.0.0), 
 - Release 1, the working ledger (`prd.md` §10, T-01), launches at its first deploy and builds its screens on the contract. It covers:
   - `prd.md` §5.1 to §5.4
   - Categories, rules, and the review queue (FR-30 to FR-32)
-  - The record-keeping half of FR-36 and FR-37 (cuota counts, due days, statement minimums)
+  - The record-keeping half of FR-36 and FR-37 (cuota counts, purchase rates and dated card rates, due days, statement minimums, and payment splits)
   - A minimal dashboard (FR-45)
-  - The payment due, new client, backup, and repeated failed attempts alerts, always on (FR-48, FR-64)
+  - The payment due, new client, backup, repeated failed attempts, and write limit alerts, always on (FR-48, FR-54, FR-64)
   - The read, write, and capture tools and the spending by category compute tool (FR-53)
 - Release 2, the planning features, starts after the go/no-go. It covers:
   - Budgets and goals (FR-33 to FR-35)
